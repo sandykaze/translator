@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translator</title>
+    <style>
+:root{
+  --bg:#f4f5f7;
+  --surface:#ffffff;
+  --surface-2:#f8f9fb;
+  --text:#111318;
+  --muted:#747a84;
+  --line:#e5e7eb;
+  --accent:#17191d;
+  --accent-hover:#30343a;
+  --blue:#3157d5;
+  --green:#18835b;
+  --violet:#7254b8;
+  --shadow:0 18px 50px rgba(16,24,40,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Arial,sans-serif}
+body{
+  background:
+    radial-gradient(circle at 50% -10%,rgba(255,255,255,.95),transparent 38%),
+    var(--bg);
+  color:var(--text);
+  padding:42px 24px 56px;
+}
+.container{max-width:1180px;width:100%;margin:0 auto}
+header{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  padding:0 4px 28px;border-bottom:1px solid var(--line);margin-bottom:28px
+}
+.brand{display:flex;flex-direction:column;gap:7px}
+h1{font-size:2rem;line-height:1;font-weight:700;letter-spacing:-.045em;color:var(--text)}
+.brand-sub{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.api-key-section{display:flex;align-items:center;gap:8px}
+.api-key-section select{
+  height:36px;padding:0 30px 0 11px;border:1px solid var(--line);
+  border-radius:9px;background:var(--surface);font-size:.78rem;color:var(--text);
+  outline:none;cursor:pointer
+}
+.api-key-section input{
+  width:220px;height:36px;padding:0 13px;border:1px solid var(--line);
+  border-radius:9px;background:var(--surface);font-size:.82rem;outline:none
+}
+.api-key-section input:focus{border-color:#b9bdc5;box-shadow:0 0 0 3px rgba(23,25,29,.05)}
+.main-grid{display:grid;grid-template-columns:minmax(0, .9fr) minmax(0, 1.1fr);gap:22px;align-items:stretch}
+.panel{
+  background:rgba(255,255,255,.92);border:1px solid rgba(229,231,235,.9);
+  border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:18px;
+  box-shadow:var(--shadow)
+}
+.panel-title{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-bottom:14px;border-bottom:1px solid var(--line)
+}
+.panel-title strong{font-size:.9rem;letter-spacing:.01em}
+.panel-title span{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.field{display:flex;flex-direction:column;gap:7px}
+label{font-weight:600;font-size:.78rem;color:#3c4149;letter-spacing:.01em;margin:0}
+textarea,select{
+  width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;
+  background:var(--surface-2);font-size:.9rem;color:var(--text);resize:vertical;outline:none;
+  transition:.2s
+}
+textarea{line-height:1.55}
+textarea:focus,select:focus{border-color:#aeb3bc;background:#fff;box-shadow:0 0 0 3px rgba(23,25,29,.045)}
+.radio-group,.checkbox-group{display:grid;grid-template-columns:1fr;gap:7px}
+.radio-label,.checkbox-label{
+  display:flex;align-items:flex-start;gap:9px;cursor:pointer;font-weight:400;
+  font-size:.82rem;color:#4b515b;line-height:1.35;margin:0
+}
+input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px}
+.btn{
+  background:var(--accent);color:#fff;border:0;padding:13px 18px;border-radius:10px;
+  font-weight:650;font-size:.88rem;cursor:pointer;transition:.2s;width:100%;
+  letter-spacing:.01em
+}
+.btn:hover{background:var(--accent-hover);transform:translateY(-1px)}
+.btn:disabled{background:#a4a8ae;cursor:not-allowed;transform:none}
+.result-card{
+  min-height:148px;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:14px;
+  padding:18px 19px;position:relative;display:none
+}
+.result-title{
+  font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px
+}
+.tag-oral{color:var(--green)}.tag-business{color:var(--blue)}.tag-formal{color:var(--violet)}
+.result-content{
+  font-size:.92rem;line-height:1.72;white-space:pre-wrap;color:#30353d;word-break:break-word
+}
+.copy-btn{
+  background:#fff;border:1px solid var(--line);border-radius:7px;padding:5px 9px;
+  font-size:.7rem;cursor:pointer;color:#626873;white-space:nowrap
+}
+.copy-btn:hover{background:#f0f1f3;color:var(--text)}
+.loading{text-align:center;padding:90px 0;color:var(--muted);font-size:.82rem;display:none}
+#results{display:flex;flex-direction:column;gap:12px;flex:1}
+
+@media(max-width:850px){
+  .settings-bar{grid-template-columns:1fr 1fr}
+  .setting-item:nth-child(2){border-right:0}
+  .setting-item:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .setting-item:nth-child(3){border-right:0}
+}
+@media(max-width:560px){
+  .settings-bar{grid-template-columns:1fr}
+  .setting-item{border-right:0!important;border-bottom:1px solid var(--line)}
+  .setting-item:last-child{border-bottom:0}
+}
+
+@media(max-width:850px){
+  body{padding:24px 15px 40px}
+  header{align-items:flex-start;gap:18px;flex-direction:column}
+  .api-key-section{width:100%;display:flex;flex-wrap:wrap}.api-key-section input{flex:1;min-width:180px}.api-key-section select{flex:0 1 auto}
+  .main-grid{grid-template-columns:1fr}
+}
+
+.settings-bar{
+  display:grid;
+  grid-template-columns:1fr 1.18fr 1.18fr 1.18fr;
+  gap:0;
+  background:rgba(255,255,255,.96);
+  border:1px solid rgba(229,231,235,.95);
+  border-radius:16px;
+  box-shadow:0 12px 38px rgba(16,24,40,.055);
+  margin-bottom:22px;
+  overflow:hidden;
+}
+.setting-item{
+  min-width:0;
+  padding:18px 22px 19px;
+  border-right:1px solid var(--line);
+}
+.setting-item:last-child{border-right:0}
+.setting-item>label{
+  display:block;
+  margin-bottom:10px;
+  font-size:.67rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.11em;
+  color:#8a9099;
+}
+.setting-item select{
+  height:34px;
+  padding:0 28px 0 10px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--surface-2);
+  color:var(--text);
+  font-size:.79rem;
+  outline:none;
+}
+.setting-options .radio-group,
+.setting-options .checkbox-group{
+  display:flex;
+  flex-direction:row;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:7px 14px;
+}
+.setting-options .radio-label,
+.setting-options .checkbox-label{
+  font-size:.76rem;
+  white-space:nowrap;
+}
+.email-option{margin-left:2px!important}
+.settings-bar .checkbox-group .checkbox-label{margin-bottom:0}
+
+#contextInput{min-height:100px}
+#ideaInput{min-height:125px}
+
+.communication-options .email-option{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin:0!important;
+  line-height:1;
+}
+.communication-options .email-option input{
+  margin:0;
+  transform:translateY(0);
+}
+.communication-options .email-option span{
+  display:inline-block;
+  line-height:1.2;
+}
+
+.communication-options .radio-group{
+  display:grid!important;
+  grid-template-columns:1fr 1fr;
+  column-gap:16px;
+  row-gap:7px;
+}
+.communication-options .email-option{
+  grid-column:2;
+  grid-row:1;
+  align-self:center;
+  justify-self:start;
+  margin:0!important;
+  margin-left:8px!important;
+}
+
+.recipient-options .radio-group{
+  display:grid!important;
+  grid-template-columns:1fr;
+  gap:7px;
+}
+
+.output-setting .checkbox-group{
+  display:grid!important;
+  grid-template-columns:1fr 1fr;
+  column-gap:14px;
+  row-gap:7px;
+}
+.output-setting .checkbox-label:last-child{
+  grid-column:1;
+}
+
+@media(max-width:850px){
+  .settings-bar{grid-template-columns:1fr 1fr}
+  .communication-options .radio-group,
+  .output-setting .checkbox-group{grid-template-columns:1fr}
+  .communication-options .email-option{grid-column:1;grid-row:auto;margin-left:0!important}
+  .output-setting .checkbox-label:last-child{grid-column:auto}
+}
+@media(max-width:560px){
+  .settings-bar{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="brand"><h1>Translator</h1><div class="brand-sub">Business Language Assistant</div></div>
+        <div class="api-key-section">
+            <select id="modelSelect" aria-label="AI model"></select>
+            <input type="password" id="apiKey" placeholder="Gemini API Key">
+            <button class="copy-btn" onclick="saveApiKey()">Save</button>
+        </div>
+    </header>
+
+
+    <section class="settings-bar">
+        <div class="setting-item">
+            <label>Target language</label>
+            <select id="targetLang">
+                    <option value="日语">Japanese</option>
+                    <option value="英语">English</option>
+                </select>
+        </div>
+        <div class="setting-item">
+            <label>Recipient</label>
+            <div class="setting-options recipient-options">
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="recipientType" value="internal"> Internal / colleague
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="recipientType" value="external" checked> External / business partner
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="setting-item">
+            <label>Communication</label>
+            <div class="setting-options communication-options">
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="commMode" value="initiate" onchange="toggleCommMode()"> Initiate
+                    </label>
+                    <label class="checkbox-label email-option">
+                        <input type="checkbox" id="isEmail"> <span>※ Email</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="commMode" value="reply" checked onchange="toggleCommMode()"> Reply
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="setting-item output-setting">
+            <label>Output style</label>
+            <div class="setting-options">
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="genOral" checked> Casual / IM
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="genBusiness"> Business
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="genFormal"> Formal
+                    </label>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="main-grid">
+        <div class="panel"><div class="panel-title"><strong>Input</strong><span>Compose</span></div>
+            
+
+            
+
+            
+            <div id="contextGroup" class="field">
+                <label for="contextInput">Context <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+                <textarea id="contextInput" rows="4" placeholder="Paste the original message or relevant context"></textarea>
+            </div>
+
+            
+            <div class="field">
+                <label for="ideaInput">Your message</label>
+                <textarea id="ideaInput" rows="5" placeholder="Write what you want to say"></textarea>
+            </div>
+
+            <button class="btn" id="submitBtn" onclick="generateResponse()">Generate</button>
+        </div>
+
+        <div class="panel"><div class="panel-title"><strong>Output</strong><span>Generated</span></div>
+            
+            <div id="loading" class="loading">Generating…</div>
+
+            <div id="results" style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- 结果 1：口头/IM -->
+                <div class="result-card" id="cardOral">
+                    <div class="result-title tag-oral">
+                        <span>Casual / IM</span>
+                        <button class="copy-btn" onclick="copyText('resOral')">复制全文</button>
+                    </div>
+                    <div class="result-content" id="resOral">等待生成...</div>
+                </div>
+
+                <!-- 结果 2：标准商务 -->
+                <div class="result-card" id="cardBusiness">
+                    <div class="result-title tag-business">
+                        <span>Business</span>
+                        <button class="copy-btn" onclick="copyText('resBusiness')">复制全文</button>
+                    </div>
+                    <div class="result-content" id="resBusiness">等待生成...</div>
+                </div>
+
+                <!-- 结果 3：高度正式 -->
+                <div class="result-card" id="cardFormal">
+                    <div class="result-title tag-formal">
+                        <span>Formal</span>
+                        <button class="copy-btn" onclick="copyText('resFormal')">复制全文</button>
+                    </div>
+                    <div class="result-content" id="resFormal">等待生成...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.onload = function() {
+        updateModelOptions();
+        loadProviderKey();
+        toggleCommMode();
+    };
+
+    const MODEL_OPTIONS = {
+        gemini: [
+            { value: 'gemini-3.6-flash', label: 'Gemini 3.6 Flash' },
+            { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' }
+        ]
+    };
+
+    function updateModelOptions() {
+        const select = document.getElementById('modelSelect');
+        const savedModel = localStorage.getItem('translator_model_gemini');
+        select.innerHTML = '';
+
+        MODEL_OPTIONS.gemini.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model.value;
+            option.textContent = model.label;
+            select.appendChild(option);
+        });
+
+        const valid = MODEL_OPTIONS.gemini.some(m => m.value === savedModel);
+        select.value = valid ? savedModel : 'gemini-3.6-flash';
+
+        select.onchange = function() {
+            localStorage.setItem('translator_model_gemini', select.value);
+        };
+    }
+
+    function loadProviderKey() {
+        const savedKey = localStorage.getItem('gemini_api_key') || '';
+        document.getElementById('apiKey').value = savedKey;
+        document.getElementById('apiKey').placeholder = 'Gemini API Key';
+    }
+
+    function saveApiKey() {
+        const key = document.getElementById('apiKey').value.trim();
+        if (key) {
+            localStorage.setItem('gemini_api_key', key);
+            alert('API Key saved');
+        } else {
+            localStorage.removeItem('gemini_api_key');
+            alert('API Key cleared');
+        }
+    }
+
+    function toggleCommMode() {
+        const mode = document.querySelector('input[name="commMode"]:checked').value;
+        const contextGroup = document.getElementById('contextGroup');
+        if (mode === 'initiate') {
+            contextGroup.style.display = 'none';
+        } else {
+            contextGroup.style.display = 'block';
+        }
+    }
+
+    async function generateResponse() {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        const model = document.getElementById('modelSelect').value;
+        const targetLang = document.getElementById('targetLang').value;
+        const recipientType = document.querySelector('input[name="recipientType"]:checked').value;
+        const mode = document.querySelector('input[name="commMode"]:checked').value;
+        const isEmail = document.getElementById('isEmail').checked;
+        const context = document.getElementById('contextInput').value.trim();
+        const idea = document.getElementById('ideaInput').value.trim();
+
+        const genOral = document.getElementById('genOral').checked;
+        const genBusiness = document.getElementById('genBusiness').checked;
+        const genFormal = document.getElementById('genFormal').checked;
+
+        if (!apiKey) {
+            alert('Please enter and save the API Key for the selected provider.');
+            return;
+        }
+
+        if (!idea) {
+            alert('请填入你的核心表达要点！');
+            return;
+        }
+
+        if (!genOral && !genBusiness && !genFormal) {
+            alert('请至少勾选一种要生成的场景语气！');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+
+        document.getElementById('cardOral').style.display = 'none';
+        document.getElementById('cardBusiness').style.display = 'none';
+        document.getElementById('cardFormal').style.display = 'none';
+
+        submitBtn.disabled = true;
+        loading.style.display = 'block';
+
+        const greetingInstruction = recipientType === 'internal' 
+            ? '开头统一使用“お疲れ様です。”作为问候语。' 
+            : '开头统一使用“お世話になっております。”作为问候语。';
+
+        let prompt = `你是一位精通中日/中英商务沟通的专家。请将用户的要点翻译转换为【${targetLang}】。
+
+【沟通基本设定】：
+- 沟通对象：${recipientType === 'internal' ? '同事/跨部门同事' : '外部公司/店铺担当'}
+- 开头寒暄要求：${greetingInstruction}
+- 沟通模式：${mode === 'reply' ? 'Reply消息' : '主动找对方发起沟通'}
+- 是否为邮件：${isEmail ? '是（如果生成商务或正式邮件，最上方需附带【件名：xxx】）' : '否（即时消息/普通文本）'}
+${mode === 'reply' && context ? `- 【对方发来的原话/上下文】：${context}` : ''}
+- 【用户想表达的核心意思】：${idea}
+
+【“〜の件” 使用规则（非常严格，请务必遵守）】：
+1. **只有在【Reply】且上下文明确有某个具体事项时**，才可以自然使用“〜の件”引出话题。
+2. **绝对禁止无上下文乱用“〜の件”**！如果用户是【Initiate发起沟通】，或者没有明确具体的对应事项，直接表达核心意思即可，切勿硬加“〜の件”。
+
+【场景语气分寸要求】：
+
+`;
+
+        if (genOral) {
+            prompt += `
+[1. 口头/即时通讯场景 (viber/dingtalk/slack)]
+- 敬语标准：常用礼貌敬语（如：ご連絡ありがとうございます、お願いいたします、いただければと思います、です/ます）。
+- 风格：简洁自然，短小精悍，杜绝硬邦邦的复杂敬语与冗长废话。
+`;
+        }
+
+        if (genBusiness) {
+            prompt += `
+[2. 标准商务场景 (日常邮件/业务对接)]
+- 敬语标准：得体专业（如：ご連絡いただきありがとうございます。問題ございません。いただければと存じます。）。
+- 注意：**不需要**过度重度的敬语（如：申し上げます 等）。
+`;
+        }
+
+        if (genFormal) {
+            prompt += `
+[3. 高度正式场景 (客户高层/正式致歉/正式函件)]
+- 敬语标准：最高级别商务敬语（如：深くお詫び申し上げます、ご高配を賜りたく存じます）。
+`;
+        }
+
+        prompt += `
+请以 JSON 格式输出结果（绝对不要包含 markdown \`\`\`json 标记），包含字段：
+${genOral ? '"oral": "生成的口头回复文本",' : ''}
+${genBusiness ? '"business": "生成的标准商务文本",' : ''}
+${genFormal ? '"formal": "生成的高度正式文本",' : ''}
+`;
+
+        try {
+            let rawText = '';
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || data.error) {
+                    throw new Error(data.error?.message || 'Gemini API request failed');
+                }
+                rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+            if (!rawText) {
+                throw new Error('No response text returned by the selected provider.');
+            }
+            rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+            const parsed = JSON.parse(rawText);
+
+            if (genOral && parsed.oral) {
+                document.getElementById('resOral').innerText = parsed.oral;
+                document.getElementById('cardOral').style.display = 'block';
+            }
+            if (genBusiness && parsed.business) {
+                document.getElementById('resBusiness').innerText = parsed.business;
+                document.getElementById('cardBusiness').style.display = 'block';
+            }
+            if (genFormal && parsed.formal) {
+                document.getElementById('resFormal').innerText = parsed.formal;
+                document.getElementById('cardFormal').style.display = 'block';
+            }
+
+        } catch (err) {
+            alert('生成失败: ' + err.message);
+        } finally {
+            submitBtn.disabled = false;
+            loading.style.display = 'none';
+        }
+    }
+
+    function copyText(elementId) {
+        const text = document.getElementById(elementId).innerText;
+        if (text && text !== '等待生成...') {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('已复制到剪贴板！');
+            });
+        }
+    }
+</script>
+
+</body>
+</html>
