@@ -101,6 +101,40 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 .loading{text-align:center;padding:90px 0;color:var(--muted);font-size:.82rem;display:none}
 #results{display:flex;flex-direction:column;gap:12px;flex:1}
 
+.step-indicator{
+  display:flex;flex-direction:column;gap:0;
+  padding:6px 2px 18px;
+}
+.step-item{
+  display:flex;align-items:center;gap:11px;
+  padding:8px 2px;
+  font-size:.82rem;color:var(--muted);
+  position:relative;
+}
+.step-item .step-dot{
+  width:18px;height:18px;border-radius:50%;
+  border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  flex:0 0 auto;background:#fff;
+  transition:.2s;
+}
+.step-item:not(:last-child)::before{
+  content:'';position:absolute;left:8px;top:26px;
+  width:2px;height:calc(100% - 4px);
+  background:var(--line);
+}
+.step-item.done .step-dot{background:var(--green);border-color:var(--green)}
+.step-item.done .step-dot::after{content:'✓';color:#fff;font-size:.62rem;font-weight:700}
+.step-item.done:not(:last-child)::before{background:var(--green)}
+.step-item.active{color:var(--text);font-weight:650}
+.step-item.active .step-dot{border-color:var(--accent)}
+.step-item.active .step-dot::after{
+  content:'';width:8px;height:8px;border-radius:50%;
+  background:var(--accent);
+  animation:pulse-dot 1s ease-in-out infinite;
+}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.7)}}
+
 @media(max-width:850px){
   .settings-bar{grid-template-columns:1fr 1fr}
   .setting-item:nth-child(2){border-right:0}
@@ -325,7 +359,8 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 
         <div class="panel"><div class="panel-title"><strong>Output</strong><span>Generated</span></div>
             
-            <div id="loading" class="loading">Generating…</div>
+            <div id="loading" class="loading">Connecting…</div>
+            <div id="stepIndicator" class="step-indicator" style="display:none"></div>
 
             <div id="results" style="display: flex; flex-direction: column; gap: 16px;">
                 <!-- 结果 1：口头/IM -->
@@ -451,108 +486,223 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 
         const submitBtn = document.getElementById('submitBtn');
         const loading = document.getElementById('loading');
+        const stepIndicatorEl = document.getElementById('stepIndicator');
 
         document.getElementById('cardOral').style.display = 'none';
         document.getElementById('cardBusiness').style.display = 'none';
         document.getElementById('cardFormal').style.display = 'none';
 
         submitBtn.disabled = true;
-        loading.style.display = 'block';
+        loading.style.display = 'none';
 
-        const greetingInstruction = recipientType === 'internal' 
-            ? '开头统一使用“お疲れ様です。”作为问候语。' 
-            : '开头统一使用“お世話になっております。”作为问候语。';
+        // 构建真实的步骤列表：连接 -> 依次生成各语气 -> 完成
+        const stepDefs = [{ id: 'connect', label: '连接 AI 服务' }];
+        const contentStepOrder = [];
+        if (genOral) { stepDefs.push({ id: 'ORAL', label: '生成 Casual / IM 文案' }); contentStepOrder.push('ORAL'); }
+        if (genBusiness) { stepDefs.push({ id: 'BUSINESS', label: '生成 Business 文案' }); contentStepOrder.push('BUSINESS'); }
+        if (genFormal) { stepDefs.push({ id: 'FORMAL', label: '生成 Formal 文案' }); contentStepOrder.push('FORMAL'); }
+        stepDefs.push({ id: 'done', label: '完成' });
 
-        let prompt = `你是一位精通中日/中英商务沟通的专家。请将用户的要点翻译转换为【${targetLang}】。
+        stepIndicatorEl.innerHTML = stepDefs.map(s =>
+            `<div class="step-item" data-step="${s.id}"><span class="step-dot"></span><span>${s.label}</span></div>`
+        ).join('');
+        stepIndicatorEl.style.display = 'flex';
+
+        function setStepStatus(id, status) {
+            const el = stepIndicatorEl.querySelector(`.step-item[data-step="${id}"]`);
+            if (!el) return;
+            el.classList.remove('done', 'active');
+            if (status) el.classList.add(status);
+        }
+
+        setStepStatus('connect', 'active');
+        let contentStepPos = 0;
+
+        const isJapanese = targetLang === '日语';
+
+        const greetingInstruction = isJapanese
+            ? (recipientType === 'internal'
+                ? '开头统一使用“お疲れ様です。”作为问候语。'
+                : '开头统一使用“お世話になっております。”作为问候语。')
+            : (recipientType === 'internal'
+                ? '开头使用简短自然的英文问候语（如：Hi [Name], / Hope you are doing well,），不要用日语。'
+                : '开头使用得体的英文商务问候语（如：Dear [Name], / Hello [Name],），不要用日语。');
+
+        let prompt = `你是一位精通中日/中英商务沟通的专家。请将用户的要点翻译转换为【${targetLang}】。**无论如何，最终输出必须完全是${targetLang}，不允许混入其他语言的词汇或句子。**
 
 【沟通基本设定】：
 - 沟通对象：${recipientType === 'internal' ? '同事/跨部门同事' : '外部公司/店铺担当'}
 - 开头寒暄要求：${greetingInstruction}
 - 沟通模式：${mode === 'reply' ? 'Reply消息' : '主动找对方发起沟通'}
-- 是否为邮件：${isEmail ? '是（如果生成商务或正式邮件，最上方需附带【件名：xxx】）' : '否（即时消息/普通文本）'}
+- 是否为邮件：${isEmail ? `是（如果生成商务或正式邮件，最上方需附带【${isJapanese ? '件名：xxx' : 'Subject: xxx'}】）` : '否（即时消息/普通文本）'}
 ${mode === 'reply' && context ? `- 【对方发来的原话/上下文】：${context}` : ''}
 - 【用户想表达的核心意思】：${idea}
 
-【“〜の件” 使用规则（非常严格，请务必遵守）】：
-1. **只有在【Reply】且上下文明确有某个具体事项时**，才可以自然使用“〜の件”引出话题。
-2. **绝对禁止无上下文乱用“〜の件”**！如果用户是【Initiate发起沟通】，或者没有明确具体的对应事项，直接表达核心意思即可，切勿硬加“〜の件”。
+${isJapanese ? `【"〜の件" 使用规则（非常严格，请务必遵守）】：
+1. **只有在【Reply】且上下文明确有某个具体事项时**，才可以自然使用"〜の件"引出话题。
+2. **绝对禁止无上下文乱用"〜の件"**！如果用户是【Initiate发起沟通】，或者没有明确具体的对应事项，直接表达核心意思即可，切勿硬加"〜の件"。
 
-【场景语气分寸要求】：
+` : ''}【场景语气分寸要求】：
 
 `;
 
         if (genOral) {
-            prompt += `
+            prompt += isJapanese ? `
 [1. 口头/即时通讯场景 (viber/dingtalk/slack)]
 - 敬语标准：常用礼貌敬语（如：ご連絡ありがとうございます、お願いいたします、いただければと思います、です/ます）。
 - 风格：简洁自然，短小精悍，杜绝硬邦邦的复杂敬语与冗长废话。
+` : `
+[1. Casual / IM scenario (Slack/DingTalk/Viber)]
+- Tone: polite but relaxed everyday business English (e.g. "Thanks for letting me know", "Could you please...", "Just wanted to check...").
+- Style: short, natural, conversational — avoid stiff or overly formal wording.
 `;
         }
 
         if (genBusiness) {
-            prompt += `
+            prompt += isJapanese ? `
 [2. 标准商务场景 (日常邮件/业务对接)]
 - 敬语标准：得体专业（如：ご連絡いただきありがとうございます。問題ございません。いただければと存じます。）。
 - 注意：**不需要**过度重度的敬语（如：申し上げます 等）。
+` : `
+[2. Standard business scenario (everyday email/business correspondence)]
+- Tone: professional and courteous standard business English (e.g. "Thank you for reaching out", "That works on our end", "We would appreciate it if...").
+- Note: avoid overly stiff or archaic phrasing — keep it natural professional English.
 `;
         }
 
         if (genFormal) {
-            prompt += `
+            prompt += isJapanese ? `
 [3. 高度正式场景 (客户高层/正式致歉/正式函件)]
 - 敬语标准：最高级别商务敬语（如：深くお詫び申し上げます、ご高配を賜りたく存じます）。
+` : `
+[3. Highly formal scenario (senior client contacts, formal apologies, official correspondence)]
+- Tone: the most formal, respectful register of business English (e.g. "We sincerely apologize for...", "We would be most grateful for your continued support...").
 `;
         }
 
         prompt += `
-请以 JSON 格式输出结果（绝对不要包含 markdown \`\`\`json 标记），包含字段：
-${genOral ? '"oral": "生成的口头回复文本",' : ''}
-${genBusiness ? '"business": "生成的标准商务文本",' : ''}
-${genFormal ? '"formal": "生成的高度正式文本",' : ''}
+请严格按照以下纯文本格式输出结果（不要使用 JSON，不要使用 markdown 代码块标记，不要输出任何多余的说明文字）：
+${genOral ? '###ORAL_START###\n(这里写口头回复文本)\n###ORAL_END###\n' : ''}${genBusiness ? '###BUSINESS_START###\n(这里写标准商务文本)\n###BUSINESS_END###\n' : ''}${genFormal ? '###FORMAL_START###\n(这里写高度正式文本)\n###FORMAL_END###\n' : ''}
+请务必带上对应的 ###xxx_START### 和 ###xxx_END### 标记，标记独占一行，标记之间才是正文内容。
 `;
 
-        try {
-            let rawText = '';
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`;
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }]
-                    })
-                });
+        // 各场景对应的标记与目标 DOM 元素
+        const sections = [
+            { key: 'ORAL', enabled: genOral, contentEl: 'resOral', cardEl: 'cardOral' },
+            { key: 'BUSINESS', enabled: genBusiness, contentEl: 'resBusiness', cardEl: 'cardBusiness' },
+            { key: 'FORMAL', enabled: genFormal, contentEl: 'resFormal', cardEl: 'cardFormal' }
+        ];
+        sections.forEach(s => {
+            if (s.enabled) document.getElementById(s.contentEl).innerText = '';
+        });
 
-                const data = await response.json();
-                if (!response.ok || data.error) {
-                    throw new Error(data.error?.message || 'Gemini API request failed');
+        // 根据当前已收到的全部文本，把每个 section 的内容实时刷新到对应卡片上，
+        // 同时推进步骤指示器（依据 END 标记是否已经出现来判断某一步是否真正完成）
+        function renderStreamedText(buffer) {
+            sections.forEach(s => {
+                if (!s.enabled) return;
+                const startTag = `###${s.key}_START###`;
+                const endTag = `###${s.key}_END###`;
+                const startIdx = buffer.indexOf(startTag);
+                if (startIdx === -1) return;
+
+                const contentStart = startIdx + startTag.length;
+                const endIdx = buffer.indexOf(endTag, contentStart);
+                const text = endIdx === -1
+                    ? buffer.slice(contentStart)
+                    : buffer.slice(contentStart, endIdx);
+
+                const card = document.getElementById(s.cardEl);
+                if (card.style.display !== 'block') card.style.display = 'block';
+                document.getElementById(s.contentEl).innerText = text.trim();
+            });
+
+            // 依次检查当前步骤是否已经出现对应的 END 标记，出现则视为该步骤完成，推进到下一步
+            while (contentStepPos < contentStepOrder.length) {
+                const key = contentStepOrder[contentStepPos];
+                if (buffer.includes(`###${key}_END###`)) {
+                    setStepStatus(key, 'done');
+                    contentStepPos++;
+                    if (contentStepPos < contentStepOrder.length) {
+                        setStepStatus(contentStepOrder[contentStepPos], 'active');
+                    }
+                } else {
+                    break;
                 }
-                rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            }
+        }
 
-            if (!rawText) {
+        try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse&key=${apiKey}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => null);
+                throw new Error(errData?.error?.message || 'Gemini API request failed');
+            }
+
+            // 连接建立、开始收到流 -> 「连接」步骤完成，进入第一个内容生成步骤
+            setStepStatus('connect', 'done');
+            if (contentStepOrder.length > 0) {
+                setStepStatus(contentStepOrder[0], 'active');
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let sseBuffer = '';   // 未处理完的原始 SSE 数据
+            let textBuffer = '';  // 已解析出的模型文本（用于按标记切分渲染）
+            let gotAnyText = false;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                sseBuffer += decoder.decode(value, { stream: true });
+                const lines = sseBuffer.split('\n');
+                sseBuffer = lines.pop(); // 最后一行可能不完整，留到下一轮
+
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed.startsWith('data:')) continue;
+                    const jsonStr = trimmed.slice(5).trim();
+                    if (!jsonStr || jsonStr === '[DONE]') continue;
+                    try {
+                        const chunk = JSON.parse(jsonStr);
+                        const piece = chunk?.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (piece) {
+                            textBuffer += piece;
+                            gotAnyText = true;
+                            renderStreamedText(textBuffer);
+                        }
+                    } catch (e) {
+                        // 单个 chunk 解析失败就跳过，不中断整个流
+                    }
+                }
+            }
+
+            if (!gotAnyText) {
                 throw new Error('No response text returned by the selected provider.');
             }
-            rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
 
-            const parsed = JSON.parse(rawText);
+            // 流结束后再刷新一次，确保末尾标记也被正确裁剪掉
+            renderStreamedText(textBuffer);
 
-            if (genOral && parsed.oral) {
-                document.getElementById('resOral').innerText = parsed.oral;
-                document.getElementById('cardOral').style.display = 'block';
-            }
-            if (genBusiness && parsed.business) {
-                document.getElementById('resBusiness').innerText = parsed.business;
-                document.getElementById('cardBusiness').style.display = 'block';
-            }
-            if (genFormal && parsed.formal) {
-                document.getElementById('resFormal').innerText = parsed.formal;
-                document.getElementById('cardFormal').style.display = 'block';
-            }
+            // 保险：如果最后一步因为标记未被完整捕获而没被标记为 done，这里统一收尾
+            contentStepOrder.forEach(key => setStepStatus(key, 'done'));
+            setStepStatus('done', 'done');
 
         } catch (err) {
             alert('生成失败: ' + err.message);
         } finally {
             submitBtn.disabled = false;
             loading.style.display = 'none';
+            setTimeout(() => { stepIndicatorEl.style.display = 'none'; }, 900);
         }
     }
 
