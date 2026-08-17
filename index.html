@@ -36,6 +36,19 @@ header{
 h1{font-size:2rem;line-height:1;font-weight:700;letter-spacing:-.045em;color:var(--text)}
 .brand-sub{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .api-key-section{display:flex;align-items:center;gap:8px}
+.header-controls{display:flex;align-items:center;gap:14px}
+.ui-lang-switch{
+  display:flex;align-items:center;gap:2px;
+  background:var(--surface-2);border:1px solid var(--line);
+  border-radius:9px;padding:3px;
+}
+.lang-btn{
+  border:0;background:transparent;cursor:pointer;
+  padding:6px 12px;border-radius:6px;font-size:.78rem;font-weight:600;
+  color:var(--muted);transition:.15s;
+}
+.lang-btn:hover{color:var(--text)}
+.lang-btn.active{background:var(--accent);color:#fff}
 .api-key-section select{
   height:36px;padding:0 30px 0 11px;border:1px solid var(--line);
   border-radius:9px;background:var(--surface);font-size:.78rem;color:var(--text);
@@ -150,6 +163,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 @media(max-width:850px){
   body{padding:24px 15px 40px}
   header{align-items:flex-start;gap:18px;flex-direction:column}
+  .header-controls{width:100%;flex-wrap:wrap;gap:10px}
   .api-key-section{width:100%;display:flex;flex-wrap:wrap}.api-key-section input{flex:1;min-width:180px}.api-key-section select{flex:0 1 auto}
   .main-grid{grid-template-columns:1fr}
 }
@@ -272,64 +286,70 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 
 <div class="container">
     <header>
-        <div class="brand"><h1>Translator</h1><div class="brand-sub">Business Language Assistant</div></div>
-        <div class="api-key-section">
-            <select id="modelSelect" aria-label="AI model"></select>
-            <input type="password" id="apiKey" placeholder="Gemini API Key">
-            <button class="copy-btn" onclick="saveApiKey()">Save</button>
+        <div class="brand"><h1>Translator</h1><div class="brand-sub" data-i18n="brandSub">Business Language Assistant</div></div>
+        <div class="header-controls">
+            <div class="ui-lang-switch" role="group" aria-label="UI language">
+                <button type="button" class="lang-btn" id="langBtnZh" onclick="setUILang('zh')">中文</button>
+                <button type="button" class="lang-btn" id="langBtnEn" onclick="setUILang('en')">EN</button>
+            </div>
+            <div class="api-key-section">
+                <select id="modelSelect" aria-label="AI model"></select>
+                <input type="password" id="apiKey" placeholder="Gemini API Key">
+                <button class="copy-btn" onclick="saveApiKey()" data-i18n="save">Save</button>
+            </div>
         </div>
     </header>
 
 
     <section class="settings-bar">
         <div class="setting-item">
-            <label>Target language</label>
+            <label data-i18n="targetLanguage">Target language</label>
             <select id="targetLang">
-                    <option value="日语">Japanese</option>
-                    <option value="英语">English</option>
+                    <option value="日语" data-i18n="japanese">Japanese</option>
+                    <option value="英语" data-i18n="english">English</option>
                 </select>
         </div>
         <div class="setting-item">
-            <label>Recipient</label>
+            <label data-i18n="recipient">Recipient</label>
             <div class="setting-options recipient-options">
                 <div class="radio-group">
                     <label class="radio-label">
-                        <input type="radio" name="recipientType" value="internal"> Internal / colleague
+                        <input type="radio" name="recipientType" value="internal"> <span data-i18n="internalColleague">Internal / colleague</span>
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="recipientType" value="external" checked> External / business partner
+                        <input type="radio" name="recipientType" value="external" checked> <span data-i18n="externalPartner">External / business partner</span>
                     </label>
                 </div>
             </div>
         </div>
         <div class="setting-item">
-            <label>Communication</label>
+            <label data-i18n="communication">Communication</label>
             <div class="setting-options communication-options">
                 <div class="radio-group">
                     <label class="radio-label">
-                        <input type="radio" name="commMode" value="initiate" onchange="toggleCommMode()"> Initiate
+                        <input type="radio" name="commMode" value="initiate" onchange="toggleCommMode()"> <span data-i18n="initiate">Initiate</span>
                     </label>
                     <label class="checkbox-label email-option">
-                        <input type="checkbox" id="isEmail"> <span>※ Email</span>
+                        <input type="checkbox" id="isEmail"> <span data-i18n="emailTag">※ Email</span>
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="commMode" value="reply" checked onchange="toggleCommMode()"> Reply
+                        <input type="radio" name="commMode" value="reply" checked onchange="toggleCommMode()"> <span data-i18n="reply">Reply</span>
                     </label>
                 </div>
             </div>
         </div>
         <div class="setting-item output-setting">
-            <label>Output style</label>
+            <label data-i18n="outputStyle">Output style</label>
             <div class="setting-options">
                 <div class="checkbox-group">
                     <label class="checkbox-label">
-                        <input type="checkbox" id="genOral" checked> Casual / IM
+                        <input type="checkbox" id="genOral" checked> <span data-i18n="casualIm">Casual / IM</span>
                     </label>
                     <label class="checkbox-label">
-                        <input type="checkbox" id="genBusiness"> Business
+                        <input type="checkbox" id="genBusiness"> <span data-i18n="business">Business</span>
                     </label>
                     <label class="checkbox-label">
-                        <input type="checkbox" id="genFormal"> Formal
+                        <input type="checkbox" id="genFormal"> <span data-i18n="formal">Formal</span>
                     </label>
                 </div>
             </div>
@@ -337,57 +357,57 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
     </section>
 
     <div class="main-grid">
-        <div class="panel"><div class="panel-title"><strong>Input</strong><span>Compose</span></div>
+        <div class="panel"><div class="panel-title"><strong data-i18n="input">Input</strong><span data-i18n="compose">Compose</span></div>
             
 
             
 
             
             <div id="contextGroup" class="field">
-                <label for="contextInput">Context <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
-                <textarea id="contextInput" rows="4" placeholder="Paste the original message or relevant context"></textarea>
+                <label for="contextInput"><span data-i18n="context">Context</span> <span style="font-weight:400;color:var(--muted)" data-i18n="optional">(optional)</span></label>
+                <textarea id="contextInput" rows="4" placeholder="Paste the original message or relevant context" data-i18n-placeholder="contextPlaceholder"></textarea>
             </div>
 
             
             <div class="field">
-                <label for="ideaInput">Your message</label>
-                <textarea id="ideaInput" rows="5" placeholder="Write what you want to say"></textarea>
+                <label for="ideaInput" data-i18n="yourMessage">Your message</label>
+                <textarea id="ideaInput" rows="5" placeholder="Write what you want to say" data-i18n-placeholder="yourMessagePlaceholder"></textarea>
             </div>
 
-            <button class="btn" id="submitBtn" onclick="generateResponse()">Generate</button>
+            <button class="btn" id="submitBtn" onclick="generateResponse()" data-i18n="generate">Generate</button>
         </div>
 
-        <div class="panel"><div class="panel-title"><strong>Output</strong><span>Generated</span></div>
+        <div class="panel"><div class="panel-title"><strong data-i18n="output">Output</strong><span data-i18n="generated">Generated</span></div>
             
-            <div id="loading" class="loading">Connecting…</div>
+            <div id="loading" class="loading" data-i18n="connecting">Connecting…</div>
             <div id="stepIndicator" class="step-indicator" style="display:none"></div>
 
             <div id="results" style="display: flex; flex-direction: column; gap: 16px;">
                 <!-- 结果 1：口头/IM -->
                 <div class="result-card" id="cardOral">
                     <div class="result-title tag-oral">
-                        <span>Casual / IM</span>
-                        <button class="copy-btn" onclick="copyText('resOral')">复制全文</button>
+                        <span data-i18n="casualIm">Casual / IM</span>
+                        <button class="copy-btn" onclick="copyText('resOral')" data-i18n="copyAll">复制全文</button>
                     </div>
-                    <div class="result-content" id="resOral">等待生成...</div>
+                    <div class="result-content" id="resOral" data-i18n="waiting">等待生成...</div>
                 </div>
 
                 <!-- 结果 2：标准商务 -->
                 <div class="result-card" id="cardBusiness">
                     <div class="result-title tag-business">
-                        <span>Business</span>
-                        <button class="copy-btn" onclick="copyText('resBusiness')">复制全文</button>
+                        <span data-i18n="business">Business</span>
+                        <button class="copy-btn" onclick="copyText('resBusiness')" data-i18n="copyAll">复制全文</button>
                     </div>
-                    <div class="result-content" id="resBusiness">等待生成...</div>
+                    <div class="result-content" id="resBusiness" data-i18n="waiting">等待生成...</div>
                 </div>
 
                 <!-- 结果 3：高度正式 -->
                 <div class="result-card" id="cardFormal">
                     <div class="result-title tag-formal">
-                        <span>Formal</span>
-                        <button class="copy-btn" onclick="copyText('resFormal')">复制全文</button>
+                        <span data-i18n="formal">Formal</span>
+                        <button class="copy-btn" onclick="copyText('resFormal')" data-i18n="copyAll">复制全文</button>
                     </div>
-                    <div class="result-content" id="resFormal">等待生成...</div>
+                    <div class="result-content" id="resFormal" data-i18n="waiting">等待生成...</div>
                 </div>
             </div>
         </div>
@@ -399,7 +419,128 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         updateModelOptions();
         loadProviderKey();
         toggleCommMode();
+        setUILang(localStorage.getItem('translator_ui_lang') || 'zh');
     };
+
+    // ---------- UI 界面语言（与「Target language」翻译目标语言是两回事） ----------
+    const I18N = {
+        zh: {
+            brandSub: '商务语言助手',
+            save: '保存',
+            targetLanguage: '目标语言',
+            japanese: '日语',
+            english: '英语',
+            recipient: '收件对象',
+            internalColleague: '内部 / 同事',
+            externalPartner: '外部 / 合作伙伴',
+            communication: '沟通方式',
+            initiate: '主动发起',
+            emailTag: '※ 邮件',
+            reply: '回复',
+            outputStyle: '输出风格',
+            casualIm: '口语 / 即时通讯',
+            business: '商务',
+            formal: '正式',
+            input: '输入',
+            compose: '撰写',
+            context: '上下文',
+            optional: '（可选）',
+            contextPlaceholder: '粘贴对方发来的原文或相关背景',
+            yourMessage: '你想表达的内容',
+            yourMessagePlaceholder: '写下你想表达的核心意思',
+            generate: '生成',
+            output: '输出',
+            generated: '生成结果',
+            connecting: '连接中…',
+            copyAll: '复制全文',
+            waiting: '等待生成...',
+            apiKeySaved: 'API Key 已保存',
+            apiKeyCleared: 'API Key 已清除',
+            apiKeyRequired: '请先输入并保存 API Key',
+            ideaRequired: '请填入你的核心表达要点！',
+            toneRequired: '请至少勾选一种要生成的场景语气！',
+            genFailed: '生成失败：',
+            copied: '已复制到剪贴板！',
+            stepConnect: '连接 AI 服务',
+            stepOral: '生成 口语/即时通讯 文案',
+            stepBusiness: '生成 商务 文案',
+            stepFormal: '生成 正式 文案',
+            stepDone: '完成'
+        },
+        en: {
+            brandSub: 'Business Language Assistant',
+            save: 'Save',
+            targetLanguage: 'Target language',
+            japanese: 'Japanese',
+            english: 'English',
+            recipient: 'Recipient',
+            internalColleague: 'Internal / colleague',
+            externalPartner: 'External / business partner',
+            communication: 'Communication',
+            initiate: 'Initiate',
+            emailTag: '※ Email',
+            reply: 'Reply',
+            outputStyle: 'Output style',
+            casualIm: 'Casual / IM',
+            business: 'Business',
+            formal: 'Formal',
+            input: 'Input',
+            compose: 'Compose',
+            context: 'Context',
+            optional: '(optional)',
+            contextPlaceholder: 'Paste the original message or relevant context',
+            yourMessage: 'Your message',
+            yourMessagePlaceholder: 'Write what you want to say',
+            generate: 'Generate',
+            output: 'Output',
+            generated: 'Generated',
+            connecting: 'Connecting…',
+            copyAll: 'Copy all',
+            waiting: 'Waiting to generate...',
+            apiKeySaved: 'API Key saved',
+            apiKeyCleared: 'API Key cleared',
+            apiKeyRequired: 'Please enter and save the API Key for the selected provider.',
+            ideaRequired: 'Please fill in your key message point!',
+            toneRequired: 'Please select at least one tone to generate!',
+            genFailed: 'Generation failed: ',
+            copied: 'Copied to clipboard!',
+            stepConnect: 'Connecting to AI',
+            stepOral: 'Generating Casual / IM',
+            stepBusiness: 'Generating Business',
+            stepFormal: 'Generating Formal',
+            stepDone: 'Done'
+        }
+    };
+
+    let currentUILang = 'zh';
+
+    function t(key) {
+        return (I18N[currentUILang] && I18N[currentUILang][key]) || I18N.en[key] || key;
+    }
+
+    function setUILang(lang) {
+        if (!I18N[lang]) lang = 'zh';
+        currentUILang = lang;
+        localStorage.setItem('translator_ui_lang', lang);
+        document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            // 结果卡片里已经有真实生成内容时，不要用「等待生成」占位符把它覆盖掉
+            if (key === 'waiting' && el.classList.contains('result-content')) {
+                const isPlaceholder = !el.dataset.hasContent;
+                if (isPlaceholder) el.textContent = t('waiting');
+                return;
+            }
+            el.textContent = t(key);
+        });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+        });
+
+        document.getElementById('langBtnZh').classList.toggle('active', lang === 'zh');
+        document.getElementById('langBtnEn').classList.toggle('active', lang === 'en');
+    }
 
     const MODEL_OPTIONS = {
         gemini: [
@@ -438,10 +579,10 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         const key = document.getElementById('apiKey').value.trim();
         if (key) {
             localStorage.setItem('gemini_api_key', key);
-            alert('API Key saved');
+            alert(t('apiKeySaved'));
         } else {
             localStorage.removeItem('gemini_api_key');
-            alert('API Key cleared');
+            alert(t('apiKeyCleared'));
         }
     }
 
@@ -470,17 +611,17 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         const genFormal = document.getElementById('genFormal').checked;
 
         if (!apiKey) {
-            alert('Please enter and save the API Key for the selected provider.');
+            alert(t('apiKeyRequired'));
             return;
         }
 
         if (!idea) {
-            alert('请填入你的核心表达要点！');
+            alert(t('ideaRequired'));
             return;
         }
 
         if (!genOral && !genBusiness && !genFormal) {
-            alert('请至少勾选一种要生成的场景语气！');
+            alert(t('toneRequired'));
             return;
         }
 
@@ -496,12 +637,12 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         loading.style.display = 'none';
 
         // 构建真实的步骤列表：连接 -> 依次生成各语气 -> 完成
-        const stepDefs = [{ id: 'connect', label: '连接 AI 服务' }];
+        const stepDefs = [{ id: 'connect', label: t('stepConnect') }];
         const contentStepOrder = [];
-        if (genOral) { stepDefs.push({ id: 'ORAL', label: '生成 Casual / IM 文案' }); contentStepOrder.push('ORAL'); }
-        if (genBusiness) { stepDefs.push({ id: 'BUSINESS', label: '生成 Business 文案' }); contentStepOrder.push('BUSINESS'); }
-        if (genFormal) { stepDefs.push({ id: 'FORMAL', label: '生成 Formal 文案' }); contentStepOrder.push('FORMAL'); }
-        stepDefs.push({ id: 'done', label: '完成' });
+        if (genOral) { stepDefs.push({ id: 'ORAL', label: t('stepOral') }); contentStepOrder.push('ORAL'); }
+        if (genBusiness) { stepDefs.push({ id: 'BUSINESS', label: t('stepBusiness') }); contentStepOrder.push('BUSINESS'); }
+        if (genFormal) { stepDefs.push({ id: 'FORMAL', label: t('stepFormal') }); contentStepOrder.push('FORMAL'); }
+        stepDefs.push({ id: 'done', label: t('stepDone') });
 
         stepIndicatorEl.innerHTML = stepDefs.map(s =>
             `<div class="step-item" data-step="${s.id}"><span class="step-dot"></span><span>${s.label}</span></div>`
@@ -593,7 +734,11 @@ ${genOral ? '###ORAL_START###\n(这里写口头回复文本)\n###ORAL_END###\n' 
             { key: 'FORMAL', enabled: genFormal, contentEl: 'resFormal', cardEl: 'cardFormal' }
         ];
         sections.forEach(s => {
-            if (s.enabled) document.getElementById(s.contentEl).innerText = '';
+            if (s.enabled) {
+                const el = document.getElementById(s.contentEl);
+                el.innerText = '';
+                delete el.dataset.hasContent;
+            }
         });
 
         // 根据当前已收到的全部文本，把每个 section 的内容实时刷新到对应卡片上，
@@ -614,7 +759,9 @@ ${genOral ? '###ORAL_START###\n(这里写口头回复文本)\n###ORAL_END###\n' 
 
                 const card = document.getElementById(s.cardEl);
                 if (card.style.display !== 'block') card.style.display = 'block';
-                document.getElementById(s.contentEl).innerText = text.trim();
+                const contentEl = document.getElementById(s.contentEl);
+                contentEl.innerText = text.trim();
+                contentEl.dataset.hasContent = 'true';
             });
 
             // 依次检查当前步骤是否已经出现对应的 END 标记，出现则视为该步骤完成，推进到下一步
@@ -698,7 +845,7 @@ ${genOral ? '###ORAL_START###\n(这里写口头回复文本)\n###ORAL_END###\n' 
             setStepStatus('done', 'done');
 
         } catch (err) {
-            alert('生成失败: ' + err.message);
+            alert(t('genFailed') + err.message);
         } finally {
             submitBtn.disabled = false;
             loading.style.display = 'none';
@@ -707,10 +854,11 @@ ${genOral ? '###ORAL_START###\n(这里写口头回复文本)\n###ORAL_END###\n' 
     }
 
     function copyText(elementId) {
-        const text = document.getElementById(elementId).innerText;
-        if (text && text !== '等待生成...') {
+        const el = document.getElementById(elementId);
+        const text = el.innerText;
+        if (text && el.dataset.hasContent) {
             navigator.clipboard.writeText(text).then(() => {
-                alert('已复制到剪贴板！');
+                alert(t('copied'));
             });
         }
     }
