@@ -123,10 +123,25 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
   padding:18px 19px;position:relative;display:none
 }
 .result-title{
-  font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
-  margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px
+  font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;
+  color:var(--text);position:relative;padding-left:29px;
 }
-.tag-spoken{color:var(--orange)}.tag-oral{color:var(--green)}.tag-business{color:var(--blue)}.tag-formal{color:var(--violet)}
+.result-title::before{
+  position:absolute;left:0;top:50%;transform:translateY(-50%);
+  font-size:.58rem;font-weight:800;letter-spacing:.04em;color:#9a9ea5;
+  font-variant-numeric:tabular-nums;
+}
+.tag-spoken::before{content:'01'}
+.tag-oral::before{content:'02'}
+.tag-business::before{content:'03'}
+.tag-formal::before{content:'04'}
+.tag-spoken,.tag-oral,.tag-business,.tag-formal{color:var(--text)}
+.result-title > span:first-child{position:relative}
+.result-title > span:first-child::before{
+  content:'';position:absolute;left:-18px;top:50%;width:10px;height:1px;
+  background:#c4c7cc;transform:translateY(-50%);
+}
 .result-content{
   font-size:.92rem;line-height:1.72;white-space:pre-wrap;color:#30353d;word-break:break-word
 }
@@ -413,13 +428,13 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             <div class="setting-options communication-options">
                 <div class="radio-group">
                     <label class="radio-label">
-                        <input type="radio" name="commMode" value="initiate" onchange="toggleCommMode()"> <span data-i18n="initiate">Initiate</span>
+                        <input type="radio" name="commMode" value="initiate" checked onchange="toggleCommMode()"> <span data-i18n="initiate">Initiate</span>
                     </label>
                     <label class="checkbox-label email-option">
                         <input type="checkbox" id="isEmail"> <span data-i18n="emailTag">※ 邮件（需要标题）</span>
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="commMode" value="reply" checked onchange="toggleCommMode()"> <span data-i18n="reply">Reply</span>
+                        <input type="radio" name="commMode" value="reply" onchange="toggleCommMode()"> <span data-i18n="reply">Reply</span>
                     </label>
                 </div>
             </div>
@@ -663,15 +678,15 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' }
         ],
         zhipu: [
-            { value: 'glm-4-flash', label: 'GLM-4-Flash' },
             { value: 'glm-4-airx', label: 'GLM-4-AirX' },
-            { value: 'glm-4-air', label: 'GLM-4-Air' }
+            { value: 'glm-4-air', label: 'GLM-4-Air' },
+            { value: 'glm-4.6', label: 'GLM-4.6' }
         ]
     };
 
     const PROVIDER_DEFAULT_MODEL = {
         gemini: 'gemini-3.6-flash',
-        zhipu: 'glm-4-flash'
+        zhipu: 'glm-4.6'
     };
 
     const PROVIDER_KEY_PLACEHOLDER = {
