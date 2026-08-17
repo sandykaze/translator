@@ -303,6 +303,28 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 @media(max-width:560px){
   .settings-bar{grid-template-columns:1fr}
 }
+
+/* ---------- Local translation history ---------- */
+.history-btn{height:36px;padding:0 13px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--text);font-size:.78rem;font-weight:650;cursor:pointer;transition:.15s;white-space:nowrap}
+.history-btn:hover{background:var(--surface-2);transform:translateY(-1px)}
+.history-overlay{position:fixed;inset:0;background:rgba(10,12,16,.28);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
+.history-overlay.open{opacity:1;pointer-events:auto}
+.history-drawer{position:absolute;top:0;right:0;height:100%;width:min(430px,92vw);background:var(--surface);border-left:1px solid var(--line);box-shadow:-18px 0 50px rgba(16,24,40,.14);transform:translateX(100%);transition:transform .25s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+.history-overlay.open .history-drawer{transform:translateX(0)}
+.history-head{display:flex;align-items:center;justify-content:space-between;padding:24px 22px 18px;border-bottom:1px solid var(--line)}
+.history-head h2{font-size:1.05rem;letter-spacing:-.02em}.history-head-actions{display:flex;align-items:center;gap:8px}
+.history-clear{border:0;background:transparent;color:var(--muted);font-size:.72rem;cursor:pointer;padding:6px 4px}.history-clear:hover{color:#b42318}
+.history-close{width:32px;height:32px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--text);font-size:18px;line-height:1;cursor:pointer}
+.history-list{overflow:auto;padding:10px 12px 24px;flex:1}.history-empty{padding:70px 28px;text-align:center;color:var(--muted);font-size:.82rem;line-height:1.7}
+.history-group-title{padding:14px 10px 7px;color:var(--muted);font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.history-item{position:relative;width:100%;border:1px solid transparent;border-radius:12px;background:transparent;text-align:left;padding:12px 40px 12px 12px;margin-bottom:3px;cursor:pointer;color:var(--text);transition:.15s}
+.history-item:hover{background:var(--surface-2);border-color:var(--line)}.history-time{font-size:.68rem;color:var(--muted);margin-bottom:5px}
+.history-preview{font-size:.82rem;font-weight:620;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.history-meta{margin-top:7px;font-size:.66rem;color:var(--muted)}
+.history-delete{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:25px;height:25px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:14px;cursor:pointer;opacity:0;transition:.15s}.history-item:hover .history-delete{opacity:1}.history-delete:hover{background:rgba(180,35,24,.08);color:#b42318}
+.history-detail{position:absolute;inset:0;background:var(--surface);z-index:2;display:none;flex-direction:column}.history-detail.open{display:flex}
+.history-detail-head{display:flex;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid var(--line)}.history-back{border:0;background:transparent;color:var(--text);font-size:.78rem;cursor:pointer;padding:5px 2px}.history-detail-title{font-size:.92rem;font-weight:700;flex:1}
+.history-detail-body{overflow:auto;padding:18px 20px 28px}.history-block{margin-bottom:20px}.history-block-label{font-size:.68rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px}.history-block-text{font-size:.82rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:11px 12px}.history-result{margin-top:10px}.history-result-label{font-size:.68rem;font-weight:700;margin-bottom:5px}.history-result-text{font-size:.82rem;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+@media(max-width:760px){.api-key-section{display:none}.header-controls{gap:8px}.history-btn{padding:0 10px}.history-drawer{width:100%}}
 </style>
 </head>
 <body>
@@ -321,6 +343,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
                 <button type="button" class="lang-btn" id="langBtnZh" onclick="setUILang('zh')">中文</button>
                 <button type="button" class="lang-btn" id="langBtnEn" onclick="setUILang('en')">EN</button>
             </div>
+            <button type="button" class="history-btn" onclick="openHistory()" data-i18n="history">History</button>
             <div class="api-key-section">
                 <select id="providerSelect" aria-label="AI provider" onchange="onProviderChange()">
                     <option value="gemini">Gemini</option>
@@ -332,6 +355,28 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             </div>
         </div>
     </header>
+<!-- Local history drawer -->
+<div id="historyOverlay" class="history-overlay" onclick="handleHistoryOverlayClick(event)">
+  <aside class="history-drawer" onclick="event.stopPropagation()" aria-label="History">
+    <div class="history-head">
+      <h2 data-i18n="history">History</h2>
+      <div class="history-head-actions">
+        <button class="history-clear" onclick="clearAllHistory()" data-i18n="clearHistory">Clear all</button>
+        <button class="history-close" onclick="closeHistory()" aria-label="Close">×</button>
+      </div>
+    </div>
+    <div id="historyList" class="history-list"></div>
+    <div id="historyDetail" class="history-detail">
+      <div class="history-detail-head">
+        <button class="history-back" onclick="closeHistoryDetail()">← <span data-i18n="back">Back</span></button>
+        <div class="history-detail-title" id="historyDetailTitle"></div>
+        <button class="history-btn" onclick="restoreHistoryItem()" data-i18n="restore">Restore</button>
+      </div>
+      <div class="history-detail-body" id="historyDetailBody"></div>
+    </div>
+  </aside>
+</div>
+
 
 
     <section class="settings-bar">
@@ -469,12 +514,17 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         loadProviderKey();
         toggleCommMode();
         setUILang(localStorage.getItem('translator_ui_lang') || 'zh');
+        renderHistory();
     };
 
     // ---------- UI 界面语言（与「Target language」翻译目标语言是两回事） ----------
     const I18N = {
         zh: {
             brandSub: '商务语言助手',
+            history: '历史记录',
+            clearHistory: '清空全部',
+            back: '返回',
+            restore: '恢复',
             save: '保存',
             targetLanguage: '目标语言',
             japanese: '日语',
@@ -520,6 +570,10 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         },
         en: {
             brandSub: 'Business Language Assistant',
+            history: 'History',
+            clearHistory: 'Clear all',
+            back: 'Back',
+            restore: 'Restore',
             save: 'Save',
             targetLanguage: 'Target language',
             japanese: 'Japanese',
@@ -973,6 +1027,9 @@ ${genSpoken ? '###SPOKEN_START###\n(这里写简单口语文本)\n###SPOKEN_END#
             contentStepOrder.forEach(key => setStepStatus(key, 'done'));
             setStepStatus('done', 'done');
 
+            // 生成成功后自动保存到浏览器本地历史，不上传服务器
+            saveCurrentToHistory();
+
         } catch (err) {
             alert(t('genFailed') + err.message);
         } finally {
@@ -980,6 +1037,82 @@ ${genSpoken ? '###SPOKEN_START###\n(这里写简单口语文本)\n###SPOKEN_END#
             loading.style.display = 'none';
             setTimeout(() => { stepIndicatorEl.style.display = 'none'; }, 900);
         }
+    }
+
+    // ---------- Local history ----------
+    const HISTORY_KEY = 'piiislator_translation_history';
+    const HISTORY_LIMIT = 100;
+    let selectedHistoryId = null;
+
+    function getHistory() {
+        try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+        catch (e) { return []; }
+    }
+    function saveCurrentToHistory() {
+        const results = {};
+        ['Spoken','Oral','Business','Formal'].forEach(name => {
+            const el = document.getElementById('res' + name);
+            if (el && el.dataset.hasContent && el.innerText.trim()) results[name.toUpperCase()] = el.innerText.trim();
+        });
+        if (!Object.keys(results).length) return;
+        const item = {
+            id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), timestamp: new Date().toISOString(),
+            provider: document.getElementById('providerSelect')?.value || '',
+            model: document.getElementById('modelSelect')?.value || '',
+            modelLabel: document.getElementById('modelSelect')?.selectedOptions?.[0]?.textContent || document.getElementById('modelSelect')?.value || '',
+            targetLang: document.getElementById('targetLang').value,
+            recipientType: document.querySelector('input[name="recipientType"]:checked')?.value || '',
+            mode: document.querySelector('input[name="commMode"]:checked')?.value || '',
+            isEmail: document.getElementById('isEmail').checked,
+            context: document.getElementById('contextInput').value.trim(), idea: document.getElementById('ideaInput').value.trim(), results
+        };
+        const history = getHistory(); history.unshift(item);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, HISTORY_LIMIT)));
+        renderHistory();
+    }
+    function openHistory(){ renderHistory(); document.getElementById('historyOverlay').classList.add('open'); document.body.style.overflow='hidden'; }
+    function closeHistory(){ document.getElementById('historyOverlay').classList.remove('open'); document.body.style.overflow=''; closeHistoryDetail(); }
+    function handleHistoryOverlayClick(e){ if(e.target.id==='historyOverlay') closeHistory(); }
+    function formatHistoryDate(iso){
+        const d=new Date(iso), now=new Date(), today=new Date(now.getFullYear(),now.getMonth(),now.getDate()), date=new Date(d.getFullYear(),d.getMonth(),d.getDate()), diff=Math.round((today-date)/86400000);
+        if(diff===0)return currentUILang==='zh'?'今天':'Today'; if(diff===1)return currentUILang==='zh'?'昨天':'Yesterday';
+        return currentUILang==='zh'?`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`:`${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
+    }
+    function formatHistoryTime(iso){const d=new Date(iso);return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+    function historyMeta(item){
+        const lang=item.targetLang==='日语'?(currentUILang==='zh'?'日语':'Japanese'):(currentUILang==='zh'?'英语':'English');
+        const m={SPOKEN:currentUILang==='zh'?'简单口语':'Simple Spoken',ORAL:currentUILang==='zh'?'即时通讯':'Casual / IM',BUSINESS:currentUILang==='zh'?'商务':'Business',FORMAL:currentUILang==='zh'?'正式':'Formal'};
+        const tones=Object.keys(item.results||{}).map(k=>m[k]).filter(Boolean).join(' · ');
+        const model=item.modelLabel || item.model || '';
+        return `${lang}${tones?' · '+tones:''}${item.isEmail?' · Email':''}${model?' · '+model:''}`;
+    }
+    function escapeHistory(str){return String(str??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+    function renderHistory(){
+        const list=document.getElementById('historyList'); if(!list)return; const history=getHistory();
+        if(!history.length){list.innerHTML=`<div class="history-empty">${currentUILang==='zh'?'还没有历史记录。<br>生成一次翻译后，会自动保存在这里。':'No history yet.<br>Your translations will be saved here automatically.'}</div>`;return;}
+        let lastGroup=''; list.innerHTML=history.map(item=>{const group=formatHistoryDate(item.timestamp), gh=group!==lastGroup?`<div class="history-group-title">${escapeHistory(group)}</div>`:'';lastGroup=group;return `${gh}<button class="history-item" onclick="openHistoryDetail('${item.id}')"><div class="history-time">${formatHistoryTime(item.timestamp)}</div><div class="history-preview">${escapeHistory(item.idea||'')}</div><div class="history-meta">${escapeHistory(historyMeta(item))}</div><span class="history-delete" onclick="deleteHistory(event,'${item.id}')">×</span></button>`;}).join('');
+    }
+    function deleteHistory(e,id){e.stopPropagation();localStorage.setItem(HISTORY_KEY,JSON.stringify(getHistory().filter(x=>x.id!==id)));renderHistory();}
+    function clearAllHistory(){if(!getHistory().length)return;if(!confirm(currentUILang==='zh'?'确定要清空全部历史记录吗？':'Clear all history?'))return;localStorage.removeItem(HISTORY_KEY);renderHistory();closeHistoryDetail();}
+    function openHistoryDetail(id){
+        selectedHistoryId=id; const item=getHistory().find(x=>x.id===id); if(!item)return; const L=currentUILang==='zh';
+        document.getElementById('historyDetailTitle').textContent=formatHistoryDate(item.timestamp)+'  '+formatHistoryTime(item.timestamp);
+        const blocks=[];
+        if(item.modelLabel || item.model){
+            blocks.push(`<div class="history-block history-model"><div class="history-block-label">${L?'使用模型':'Model used'}</div><div class="history-block-text">${escapeHistory(item.modelLabel || item.model)}${item.provider ? ` <span class="history-model-provider">· ${escapeHistory(item.provider)}</span>` : ''}</div></div>`);
+        } if(item.idea)blocks.push(`<div class="history-block"><div class="history-block-label">${L?'你想表达的内容':'Your message'}</div><div class="history-block-text">${escapeHistory(item.idea)}</div></div>`);
+        if(item.context)blocks.push(`<div class="history-block"><div class="history-block-label">${L?'上下文':'Context'}</div><div class="history-block-text">${escapeHistory(item.context)}</div></div>`);
+        const labels={SPOKEN:L?'简单口语':'Simple Spoken',ORAL:L?'即时通讯':'Casual / IM',BUSINESS:L?'商务':'Business',FORMAL:L?'正式':'Formal'};
+        Object.entries(item.results||{}).forEach(([key,text])=>blocks.push(`<div class="history-block history-result"><div class="history-result-label">${labels[key]||key}</div><div class="history-result-text">${escapeHistory(text)}</div></div>`));
+        document.getElementById('historyDetailBody').innerHTML=blocks.join('');document.getElementById('historyDetail').classList.add('open');
+    }
+    function closeHistoryDetail(){const el=document.getElementById('historyDetail');if(el)el.classList.remove('open');}
+    function restoreHistoryItem(){
+        const item=getHistory().find(x=>x.id===selectedHistoryId);if(!item)return;
+        const setVal=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=v;}; setVal('targetLang',item.targetLang);setVal('contextInput',item.context||'');setVal('ideaInput',item.idea||'');
+        const rec=document.querySelector(`input[name="recipientType"][value="${item.recipientType}"]`);if(rec)rec.checked=true;
+        const mode=document.querySelector(`input[name="commMode"][value="${item.mode}"]`);if(mode){mode.checked=true;toggleCommMode();}
+        const email=document.getElementById('isEmail');if(email)email.checked=!!item.isEmail; closeHistory(); window.scrollTo({top:0,behavior:'smooth'});
     }
 
     function copyText(elementId) {
