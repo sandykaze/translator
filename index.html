@@ -264,22 +264,21 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 }
 
 .communication-options .radio-group{
-  display:grid!important;
-  grid-template-columns:1fr 1fr;
-  column-gap:16px;
-  row-gap:7px;
+  display:flex!important;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px 14px;
+}
+.communication-options .radio-label:last-of-type{
+  flex-basis:100%;
 }
 .communication-options .email-option{
-  grid-column:2;
-  grid-row:1;
   align-self:center;
-  justify-self:start;
   margin:0!important;
-  margin-left:8px!important;
-  white-space:normal;
+  white-space:nowrap;
 }
 .communication-options .email-option span{
-  white-space:normal;
+  white-space:nowrap;
 }
 
 .recipient-options .radio-group{
@@ -294,16 +293,12 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
   column-gap:14px;
   row-gap:7px;
 }
-.output-setting .checkbox-label:last-child{
-  grid-column:1;
-}
 
 @media(max-width:850px){
   .settings-bar{grid-template-columns:1fr 1fr}
-  .communication-options .radio-group,
+  .communication-options .radio-group{flex-wrap:wrap}
   .output-setting .checkbox-group{grid-template-columns:1fr}
-  .communication-options .email-option{grid-column:1;grid-row:auto;margin-left:0!important}
-  .output-setting .checkbox-label:last-child{grid-column:auto}
+  .communication-options .email-option{margin-left:0!important}
 }
 @media(max-width:560px){
   .settings-bar{grid-template-columns:1fr}
