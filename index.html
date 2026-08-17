@@ -37,6 +37,7 @@
   --blue:#3157d5;
   --green:#18835b;
   --violet:#7254b8;
+  --orange:#c2760f;
   --shadow:0 18px 50px rgba(16,24,40,.07);
 }
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Arial,sans-serif}
@@ -125,7 +126,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
   font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px
 }
-.tag-oral{color:var(--green)}.tag-business{color:var(--blue)}.tag-formal{color:var(--violet)}
+.tag-spoken{color:var(--orange)}.tag-oral{color:var(--green)}.tag-business{color:var(--blue)}.tag-formal{color:var(--violet)}
 .result-content{
   font-size:.92rem;line-height:1.72;white-space:pre-wrap;color:#30353d;word-break:break-word
 }
@@ -380,6 +381,9 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             <div class="setting-options">
                 <div class="checkbox-group">
                     <label class="checkbox-label">
+                        <input type="checkbox" id="genSpoken"> <span data-i18n="casualSpoken">Simple Spoken</span>
+                    </label>
+                    <label class="checkbox-label">
                         <input type="checkbox" id="genOral" checked> <span data-i18n="casualIm">Casual / IM</span>
                     </label>
                     <label class="checkbox-label">
@@ -420,6 +424,15 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             <div id="stepIndicator" class="step-indicator" style="display:none"></div>
 
             <div id="results" style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- 结果 0：简单口语 -->
+                <div class="result-card" id="cardSpoken">
+                    <div class="result-title tag-spoken">
+                        <span data-i18n="casualSpoken">Simple Spoken</span>
+                        <button class="copy-btn" onclick="copyText('resSpoken')" data-i18n="copyAll">复制全文</button>
+                    </div>
+                    <div class="result-content" id="resSpoken" data-i18n="waiting">等待生成...</div>
+                </div>
+
                 <!-- 结果 1：口头/IM -->
                 <div class="result-card" id="cardOral">
                     <div class="result-title tag-oral">
@@ -479,6 +492,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             emailTag: '※ 邮件（需要标题）',
             reply: '回复',
             outputStyle: '输出风格',
+            casualSpoken: '简单口语（可直接说出口）',
             casualIm: '口语 / 即时通讯',
             business: '商务',
             formal: '正式',
@@ -503,6 +517,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             genFailed: '生成失败：',
             copied: '已复制到剪贴板！',
             stepConnect: '连接 AI 服务',
+            stepSpoken: '生成 简单口语 文案',
             stepOral: '生成 口语/即时通讯 文案',
             stepBusiness: '生成 商务 文案',
             stepFormal: '生成 正式 文案',
@@ -522,6 +537,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             emailTag: '※ Email (adds a subject line)',
             reply: 'Reply',
             outputStyle: 'Output style',
+            casualSpoken: 'Simple Spoken',
             casualIm: 'Casual / IM',
             business: 'Business',
             formal: 'Formal',
@@ -546,6 +562,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             genFailed: 'Generation failed: ',
             copied: 'Copied to clipboard!',
             stepConnect: 'Connecting to AI',
+            stepSpoken: 'Generating Simple Spoken',
             stepOral: 'Generating Casual / IM',
             stepBusiness: 'Generating Business',
             stepFormal: 'Generating Formal',
@@ -677,6 +694,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         const context = document.getElementById('contextInput').value.trim();
         const idea = document.getElementById('ideaInput').value.trim();
 
+        const genSpoken = document.getElementById('genSpoken').checked;
         const genOral = document.getElementById('genOral').checked;
         const genBusiness = document.getElementById('genBusiness').checked;
         const genFormal = document.getElementById('genFormal').checked;
@@ -691,7 +709,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             return;
         }
 
-        if (!genOral && !genBusiness && !genFormal) {
+        if (!genSpoken && !genOral && !genBusiness && !genFormal) {
             alert(t('toneRequired'));
             return;
         }
@@ -700,6 +718,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         const loading = document.getElementById('loading');
         const stepIndicatorEl = document.getElementById('stepIndicator');
 
+        document.getElementById('cardSpoken').style.display = 'none';
         document.getElementById('cardOral').style.display = 'none';
         document.getElementById('cardBusiness').style.display = 'none';
         document.getElementById('cardFormal').style.display = 'none';
@@ -710,6 +729,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         // 构建真实的步骤列表：连接 -> 依次生成各语气 -> 完成
         const stepDefs = [{ id: 'connect', label: t('stepConnect') }];
         const contentStepOrder = [];
+        if (genSpoken) { stepDefs.push({ id: 'SPOKEN', label: t('stepSpoken') }); contentStepOrder.push('SPOKEN'); }
         if (genOral) { stepDefs.push({ id: 'ORAL', label: t('stepOral') }); contentStepOrder.push('ORAL'); }
         if (genBusiness) { stepDefs.push({ id: 'BUSINESS', label: t('stepBusiness') }); contentStepOrder.push('BUSINESS'); }
         if (genFormal) { stepDefs.push({ id: 'FORMAL', label: t('stepFormal') }); contentStepOrder.push('FORMAL'); }
@@ -758,13 +778,29 @@ ${isJapanese ? `【"〜の件" 使用规则（非常严格，请务必遵守）�
 
 `;
 
+        if (genSpoken) {
+            prompt += isJapanese ? `
+[1. 简单口语场景（可以直接照着念出口，讲给对方听——面对面/电话/语音留言）]
+- 使用者是非母语者，日语水平有限，务必让文本容易读出声、容易理解。
+- 敬语标准：只使用最基础的です/ます体礼貌用语即可（如：ありがとうございます、お願いします、大丈夫です、わかりました）。**绝对不要**使用复杂敬语动词或谦让语（如：いたします、ご確認、拝見する、申し上げます 等）。
+- 句子要短，一句只表达一个意思，多用简单常见词汇，避免生僻商务用语、长从句、汉语式直译腔。
+- 风格：像是把要说的话直接写成"台词"，读出来自然顺口，但依然保持基本礼貌，不能显得没礼貌或太随意。
+` : `
+[1. Simple Spoken scenario (can be read aloud directly — in person, on the phone, or in a voice message)]
+- The speaker is a non-native speaker with limited fluency — the text must be easy to say out loud and easy to understand.
+- Tone: only basic, everyday politeness (e.g. "Thank you.", "Could you help me?", "Is that okay?", "I understand."). **Do not** use advanced vocabulary, idioms, or complex grammar.
+- Sentences must be short, one idea per sentence, using common simple words — avoid business jargon, long clauses, or anything hard to pronounce.
+- Style: write it like a short spoken line the person can read straight off the screen — natural and simple, but still polite, not rude or overly casual.
+`;
+        }
+
         if (genOral) {
             prompt += isJapanese ? `
-[1. 口头/即时通讯场景 (viber/dingtalk/slack)]
+[2. 口头/即时通讯场景 (viber/dingtalk/slack)]
 - 敬语标准：常用礼貌敬语（如：ご連絡ありがとうございます、お願いいたします、いただければと思います、です/ます）。
 - 风格：简洁自然，短小精悍，杜绝硬邦邦的复杂敬语与冗长废话。
 ` : `
-[1. Casual / IM scenario (Slack/DingTalk/Viber)]
+[2. Casual / IM scenario (Slack/DingTalk/Viber)]
 - Tone: polite but relaxed everyday business English (e.g. "Thanks for letting me know", "Could you please...", "Just wanted to check...").
 - Style: short, natural, conversational — avoid stiff or overly formal wording.
 `;
@@ -772,11 +808,11 @@ ${isJapanese ? `【"〜の件" 使用规则（非常严格，请务必遵守）�
 
         if (genBusiness) {
             prompt += isJapanese ? `
-[2. 标准商务场景 (日常邮件/业务对接)]
+[3. 标准商务场景 (日常邮件/业务对接)]
 - 敬语标准：得体专业（如：ご連絡いただきありがとうございます。問題ございません。いただければと存じます。）。
 - 注意：**不需要**过度重度的敬语（如：申し上げます 等）。
 ` : `
-[2. Standard business scenario (everyday email/business correspondence)]
+[3. Standard business scenario (everyday email/business correspondence)]
 - Tone: professional and courteous standard business English (e.g. "Thank you for reaching out", "That works on our end", "We would appreciate it if...").
 - Note: avoid overly stiff or archaic phrasing — keep it natural professional English.
 `;
@@ -784,22 +820,23 @@ ${isJapanese ? `【"〜の件" 使用规则（非常严格，请务必遵守）�
 
         if (genFormal) {
             prompt += isJapanese ? `
-[3. 高度正式场景 (客户高层/正式致歉/正式函件)]
+[4. 高度正式场景 (客户高层/正式致歉/正式函件)]
 - 敬语标准：最高级别商务敬语（如：深くお詫び申し上げます、ご高配を賜りたく存じます）。
 ` : `
-[3. Highly formal scenario (senior client contacts, formal apologies, official correspondence)]
+[4. Highly formal scenario (senior client contacts, formal apologies, official correspondence)]
 - Tone: the most formal, respectful register of business English (e.g. "We sincerely apologize for...", "We would be most grateful for your continued support...").
 `;
         }
 
         prompt += `
 请严格按照以下纯文本格式输出结果（不要使用 JSON，不要使用 markdown 代码块标记，不要输出任何多余的说明文字）：
-${genOral ? '###ORAL_START###\n(这里写口头回复文本)\n###ORAL_END###\n' : ''}${genBusiness ? '###BUSINESS_START###\n(这里写标准商务文本)\n###BUSINESS_END###\n' : ''}${genFormal ? '###FORMAL_START###\n(这里写高度正式文本)\n###FORMAL_END###\n' : ''}
+${genSpoken ? '###SPOKEN_START###\n(这里写简单口语文本)\n###SPOKEN_END###\n' : ''}${genOral ? '###ORAL_START###\n(这里写口头回复文本)\n###ORAL_END###\n' : ''}${genBusiness ? '###BUSINESS_START###\n(这里写标准商务文本)\n###BUSINESS_END###\n' : ''}${genFormal ? '###FORMAL_START###\n(这里写高度正式文本)\n###FORMAL_END###\n' : ''}
 请务必带上对应的 ###xxx_START### 和 ###xxx_END### 标记，标记独占一行，标记之间才是正文内容。
 `;
 
         // 各场景对应的标记与目标 DOM 元素
         const sections = [
+            { key: 'SPOKEN', enabled: genSpoken, contentEl: 'resSpoken', cardEl: 'cardSpoken' },
             { key: 'ORAL', enabled: genOral, contentEl: 'resOral', cardEl: 'cardOral' },
             { key: 'BUSINESS', enabled: genBusiness, contentEl: 'resBusiness', cardEl: 'cardBusiness' },
             { key: 'FORMAL', enabled: genFormal, contentEl: 'resFormal', cardEl: 'cardFormal' }
