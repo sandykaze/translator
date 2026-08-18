@@ -339,6 +339,44 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 .history-detail{position:absolute;inset:0;background:var(--surface);z-index:2;display:none;flex-direction:column}.history-detail.open{display:flex}
 .history-detail-head{display:flex;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid var(--line)}.history-back{border:0;background:transparent;color:var(--text);font-size:.78rem;cursor:pointer;padding:5px 2px}.history-detail-title{font-size:.92rem;font-weight:700;flex:1}
 .history-detail-body{overflow:auto;padding:18px 20px 28px}.history-block{margin-bottom:20px}.history-block-label{font-size:.68rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px}.history-block-text{font-size:.82rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:11px 12px}.history-result{margin-top:10px}.history-result-label{font-size:.68rem;font-weight:700;margin-bottom:5px}.history-result-text{font-size:.82rem;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+
+/* Premium AI header controls */
+.ai-control-wrap{position:relative;display:flex;align-items:center}
+.ai-model-trigger{height:36px;border:0;background:transparent;color:var(--text);display:flex;align-items:center;gap:8px;padding:0 2px 0 8px;font-size:.78rem;font-weight:650;letter-spacing:.005em;cursor:pointer;white-space:nowrap}
+.ai-model-trigger:hover{opacity:.72}
+.ai-spark{font-size:.82rem;line-height:1;color:var(--text)}
+.ai-chevron{font-size:.9rem;color:var(--muted);margin-left:1px;transform:translateY(-1px)}
+.model-menu{position:absolute;z-index:80;top:calc(100% + 12px);right:0;width:250px;padding:15px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 48px rgba(16,24,40,.14);display:none}
+.model-menu.open{display:block;animation:aiMenuIn .14s ease-out}
+@keyframes aiMenuIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.model-menu-kicker{font-size:.62rem;font-weight:750;letter-spacing:.16em;color:var(--muted);margin:1px 3px 12px}
+.model-provider-group+.model-provider-group{margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}
+.model-provider-title{font-size:.66rem;font-weight:700;color:var(--muted);margin:0 4px 5px}
+.model-option{width:100%;border:0;background:transparent;text-align:left;padding:8px 9px;border-radius:8px;font-size:.78rem;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+.model-option:hover{background:var(--surface-2)}
+.model-option.active{background:var(--surface-2);font-weight:700}
+.model-option.active:after{content:'✓';font-size:.72rem;color:var(--text)}
+.model-menu-footer{margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
+.api-status-btn{border:0;background:transparent;padding:4px;display:flex;align-items:center;gap:7px;font-size:.66rem;color:var(--muted);cursor:pointer}
+.api-dot{width:6px;height:6px;border-radius:50%;background:#b9bec6;display:inline-block}
+.api-dot.ready{background:#20242a}
+.api-status-btn:hover{color:var(--text)}
+.api-panel{position:absolute;z-index:90;right:0;top:calc(100% + 12px);width:290px;padding:15px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 48px rgba(16,24,40,.14);display:none}
+.api-panel.open{display:block;animation:aiMenuIn .14s ease-out}
+.api-panel-head{display:flex;align-items:center;justify-content:space-between;font-size:.62rem;font-weight:750;letter-spacing:.16em;color:var(--muted);margin-bottom:11px}
+.api-panel-head button{border:0;background:transparent;color:var(--muted);font-size:1.1rem;line-height:1;cursor:pointer}
+.api-panel-provider{font-size:.8rem;font-weight:700;margin-bottom:9px}
+.api-input-row{display:flex;gap:7px}
+.api-input-row input{min-width:0;flex:1;height:35px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);padding:0 10px;font-size:.76rem;color:var(--text);outline:none}
+.api-input-row input:focus{border-color:#aeb3bc;background:var(--surface)}
+.api-save-btn{height:35px;border:0;border-radius:8px;padding:0 11px;background:var(--accent);color:#fff;font-size:.72rem;font-weight:650;cursor:pointer}
+.api-panel-note{font-size:.62rem;color:var(--muted);margin-top:8px}
+.sr-only-control{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+@media(max-width:760px){
+  .ai-model-trigger{padding-left:2px;max-width:155px}
+  #currentModelLabel{overflow:hidden;text-overflow:ellipsis}
+  .model-menu,.api-panel{right:-4px}
+}
 @media(max-width:760px){
   .header-controls{gap:8px;align-items:stretch}
   .history-btn{padding:0 10px}
@@ -362,19 +400,46 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             <div class="brand-sub" data-i18n="brandSub">Business Language Assistant</div>
         </div>
         <div class="header-controls">
+            <button type="button" class="history-btn" onclick="openHistory()" data-i18n="history">History</button>
             <div class="ui-lang-switch" role="group" aria-label="UI language">
-                <button type="button" class="lang-btn" id="langBtnZh" onclick="setUILang('zh')">中文</button>
+                <button type="button" class="lang-btn" id="langBtnZh" onclick="setUILang('zh')">中</button>
                 <button type="button" class="lang-btn" id="langBtnEn" onclick="setUILang('en')">EN</button>
             </div>
-            <button type="button" class="history-btn" onclick="openHistory()" data-i18n="history">History</button>
-            <div class="api-key-section">
-                <select id="providerSelect" aria-label="AI provider" onchange="onProviderChange()">
+            <div class="ai-control-wrap" id="aiControlWrap">
+                <button type="button" class="ai-model-trigger" id="aiModelTrigger" onclick="toggleModelMenu()" aria-haspopup="true" aria-expanded="false">
+                    <span class="ai-spark">✦</span><span id="currentModelLabel">AI Model</span><span class="ai-chevron">⌄</span>
+                </button>
+                <div class="model-menu" id="modelMenu">
+                    <div class="model-menu-kicker">AI MODEL</div>
+                    <div class="model-provider-group">
+                        <div class="model-provider-title">Gemini</div>
+                        <button type="button" class="model-option" data-provider="gemini" data-model="gemini-3.6-flash" onclick="selectModelFromMenu(this)">Gemini 3.6 Flash</button>
+                        <button type="button" class="model-option" data-provider="gemini" data-model="gemini-3.5-flash" onclick="selectModelFromMenu(this)">Gemini 3.5 Flash</button>
+                    </div>
+                    <div class="model-provider-group">
+                        <div class="model-provider-title">Zhipu</div>
+                        <button type="button" class="model-option" data-provider="zhipu" data-model="glm-4-airx" onclick="selectModelFromMenu(this)">GLM-4-AirX</button>
+                        <button type="button" class="model-option" data-provider="zhipu" data-model="glm-4-air" onclick="selectModelFromMenu(this)">GLM-4-Air</button>
+                        <button type="button" class="model-option" data-provider="zhipu" data-model="glm-4.6" onclick="selectModelFromMenu(this)">GLM-4.6</button>
+                    </div>
+                    <div class="model-menu-footer">
+                        <button type="button" class="api-status-btn" id="apiStatusBtn" onclick="toggleApiPanel()"><span class="api-dot" id="apiStatusDot"></span><span id="apiStatusText">API</span></button>
+                    </div>
+                </div>
+                <div class="api-panel" id="apiPanel">
+                    <div class="api-panel-head"><span>API KEY</span><button type="button" onclick="toggleApiPanel()">×</button></div>
+                    <div class="api-panel-provider" id="apiPanelProvider">Gemini</div>
+                    <div class="api-input-row">
+                        <input type="password" id="apiKey" placeholder="Gemini API Key" autocomplete="off">
+                        <button type="button" class="api-save-btn" onclick="saveApiKey()" data-i18n="save">Save</button>
+                    </div>
+                    <div class="api-panel-note" id="apiPanelNote">Saved locally in this browser</div>
+                </div>
+                <select id="providerSelect" class="sr-only-control" aria-label="AI provider" onchange="onProviderChange()">
                     <option value="gemini">Gemini</option>
                     <option value="zhipu">智谱 GLM (Zhipu)</option>
                 </select>
-                <select id="modelSelect" aria-label="AI model"></select>
-                <input type="password" id="apiKey" placeholder="Gemini API Key">
-                <button class="copy-btn" onclick="saveApiKey()" data-i18n="save">Save</button>
+                <select id="modelSelect" class="sr-only-control" aria-label="AI model"></select>
             </div>
         </div>
     </header>
@@ -716,7 +781,9 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 
         select.onchange = function() {
             localStorage.setItem('translator_model_' + provider, select.value);
+            updateAiHeader();
         };
+        updateAiHeader();
     }
 
     function loadProviderKey() {
@@ -724,6 +791,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         const savedKey = localStorage.getItem(provider + '_api_key') || '';
         document.getElementById('apiKey').value = savedKey;
         document.getElementById('apiKey').placeholder = PROVIDER_KEY_PLACEHOLDER[provider];
+        updateAiHeader();
     }
 
     function saveApiKey() {
@@ -731,10 +799,12 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         const key = document.getElementById('apiKey').value.trim();
         if (key) {
             localStorage.setItem(provider + '_api_key', key);
-            alert(t('apiKeySaved'));
+            updateAiHeader();
+            document.getElementById('apiPanel').classList.remove('open');
         } else {
             localStorage.removeItem(provider + '_api_key');
-            alert(t('apiKeyCleared'));
+            updateAiHeader();
+            document.getElementById('apiPanel').classList.remove('open');
         }
     }
 
@@ -743,6 +813,56 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         localStorage.setItem('translator_provider', provider);
         updateModelOptions();
         loadProviderKey();
+    }
+
+    function getCurrentModelLabel(){
+        const provider=getCurrentProvider();
+        const model=document.getElementById('modelSelect').value;
+        return (MODEL_OPTIONS[provider]||[]).find(m=>m.value===model)?.label || model || 'AI Model';
+    }
+    function updateAiHeader(){
+        const provider=getCurrentProvider();
+        const label=getCurrentModelLabel();
+        const trigger=document.getElementById('currentModelLabel');
+        const providerName=provider==='gemini'?'Gemini':'Zhipu';
+        if(trigger) trigger.textContent=label;
+        const panelProvider=document.getElementById('apiPanelProvider');
+        if(panelProvider) panelProvider.textContent=providerName;
+        const key=(document.getElementById('apiKey')?.value||'').trim();
+        const dot=document.getElementById('apiStatusDot');
+        if(dot) dot.classList.toggle('ready',!!key);
+        const status=document.getElementById('apiStatusText');
+        if(status) status.textContent=key?'Ready':'API';
+        document.querySelectorAll('.model-option').forEach(btn=>{
+            btn.classList.toggle('active',btn.dataset.provider===provider && btn.dataset.model===document.getElementById('modelSelect').value);
+        });
+    }
+    function toggleModelMenu(){
+        const menu=document.getElementById('modelMenu');
+        const api=document.getElementById('apiPanel');
+        api.classList.remove('open');
+        menu.classList.toggle('open');
+        document.getElementById('aiModelTrigger').setAttribute('aria-expanded',menu.classList.contains('open'));
+        updateAiHeader();
+    }
+    function toggleApiPanel(){
+        const api=document.getElementById('apiPanel');
+        document.getElementById('modelMenu').classList.remove('open');
+        api.classList.toggle('open');
+        updateAiHeader();
+    }
+    function selectModelFromMenu(btn){
+        const provider=btn.dataset.provider;
+        const model=btn.dataset.model;
+        document.getElementById('providerSelect').value=provider;
+        localStorage.setItem('translator_provider',provider);
+        updateModelOptions();
+        document.getElementById('modelSelect').value=model;
+        localStorage.setItem('translator_model_'+provider,model);
+        loadProviderKey();
+        updateAiHeader();
+        document.getElementById('modelMenu').classList.remove('open');
+        document.getElementById('aiModelTrigger').setAttribute('aria-expanded','false');
     }
 
     function toggleCommMode() {
@@ -1147,6 +1267,14 @@ ${genSpoken ? '###SPOKEN_START###\n(这里写简单口语文本)\n###SPOKEN_END#
             });
         }
     }
+document.addEventListener('click',function(e){
+    const wrap=document.getElementById('aiControlWrap');
+    if(wrap && !wrap.contains(e.target)){
+        document.getElementById('modelMenu')?.classList.remove('open');
+        document.getElementById('apiPanel')?.classList.remove('open');
+        document.getElementById('aiModelTrigger')?.setAttribute('aria-expanded','false');
+    }
+});
 </script>
 
 </body>
