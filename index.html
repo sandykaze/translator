@@ -157,6 +157,13 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
   display:flex;flex-direction:column;gap:0;
   padding:6px 2px 18px;
 }
+.generation-time{
+  margin:-6px 2px 2px;
+  font-size:.68rem;
+  line-height:1.4;
+  color:var(--muted);
+  letter-spacing:.03em;
+}
 .step-item{
   display:flex;align-items:center;gap:11px;
   padding:8px 2px;
@@ -338,7 +345,20 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 .history-delete{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:25px;height:25px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:14px;cursor:pointer;opacity:0;transition:.15s}.history-item:hover .history-delete{opacity:1}.history-delete:hover{background:rgba(180,35,24,.08);color:#b42318}
 .history-detail{position:absolute;inset:0;background:var(--surface);z-index:2;display:none;flex-direction:column}.history-detail.open{display:flex}
 .history-detail-head{display:flex;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid var(--line)}.history-back{border:0;background:transparent;color:var(--text);font-size:.78rem;cursor:pointer;padding:5px 2px}.history-detail-title{font-size:.92rem;font-weight:700;flex:1}
-.history-detail-body{overflow:auto;padding:18px 20px 28px}.history-block{margin-bottom:20px}.history-block-label{font-size:.68rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px}.history-block-text{font-size:.82rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:11px 12px}.history-result{margin-top:10px}.history-result-label{font-size:.68rem;font-weight:700;margin-bottom:5px}.history-result-text{font-size:.82rem;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.history-detail-body{overflow:auto;padding:22px 20px 32px}
+.history-block{margin-bottom:18px}
+.history-block-label{font-size:.62rem;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.11em;margin-bottom:5px;opacity:.92}
+.history-block-text{font-size:.78rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;background:transparent;border:0;border-radius:0;padding:0;color:var(--muted);opacity:.94}
+.history-model .history-block-text{font-weight:600;color:var(--muted)}
+.history-detail-meta{margin-bottom:24px}
+.history-detail-meta .history-block{margin-bottom:12px}
+.history-detail-meta .history-block:last-child{margin-bottom:0}
+.history-results-primary{border-top:1px solid var(--line);padding-top:22px;margin-bottom:28px}
+.history-result{margin:0 0 24px;padding:0}
+.history-result-label{font-size:.72rem;font-weight:750;margin-bottom:9px;color:var(--text);letter-spacing:.01em}
+.history-result-text{font-size:.9rem;line-height:1.75;white-space:pre-wrap;word-break:break-word;color:var(--text)}
+.history-results-primary .history-result + .history-result{margin-top:26px}
+
 
 /* Premium AI header controls */
 .ai-control-wrap{position:relative;display:flex;align-items:center}
@@ -386,6 +406,11 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
   .api-key-section .copy-btn{flex:0 0 auto;height:36px}
   .history-drawer{width:100%}
 }
+
+/* History detail: generated output is the visual focus; source/meta recedes */
+.history-results-primary{position:relative}
+.history-result-text::selection{background:rgba(127,127,127,.22)}
+
 </style>
 </head>
 <body>
@@ -550,6 +575,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             
             <div id="loading" class="loading" data-i18n="connecting">Connecting…</div>
             <div id="stepIndicator" class="step-indicator" style="display:none"></div>
+            <div id="generationTime" class="generation-time" style="display:none"></div>
 
             <div id="results" style="display: flex; flex-direction: column; gap: 16px;">
                 <!-- 结果 0：简单口语 -->
@@ -876,6 +902,12 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
     }
 
     async function generateResponse() {
+        const generationStartTime = performance.now();
+        const generationTimeEl = document.getElementById('generationTime');
+        if (generationTimeEl) {
+            generationTimeEl.style.display = 'none';
+            generationTimeEl.textContent = '';
+        }
         const provider = getCurrentProvider();
         const apiKey = document.getElementById('apiKey').value.trim();
         const model = document.getElementById('modelSelect').value;
@@ -1166,6 +1198,17 @@ ${genSpoken ? '###SPOKEN_START###\n(这里写简单口语文本)\n###SPOKEN_END#
             // 流结束后再刷新一次，确保末尾标记也被正确裁剪掉
             renderStreamedText(textBuffer);
 
+            // 记录从点击生成到模型完整返回的总耗时（包含连接和流式生成）
+            const generationDurationMs = performance.now() - generationStartTime;
+            window.lastGenerationDurationMs = generationDurationMs;
+            if (generationTimeEl) {
+                const seconds = generationDurationMs / 1000;
+                generationTimeEl.textContent = currentUILang === 'zh'
+                    ? `本次生成用时 ${seconds < 10 ? seconds.toFixed(1) : seconds.toFixed(1)} 秒`
+                    : `Generation time: ${seconds.toFixed(1)} s`;
+                generationTimeEl.style.display = 'block';
+            }
+
             // 保险：如果最后一步因为标记未被完整捕获而没被标记为 done，这里统一收尾
             contentStepOrder.forEach(key => setStepStatus(key, 'done'));
             setStepStatus('done', 'done');
@@ -1207,6 +1250,7 @@ ${genSpoken ? '###SPOKEN_START###\n(这里写简单口语文本)\n###SPOKEN_END#
             recipientType: document.querySelector('input[name="recipientType"]:checked')?.value || '',
             mode: document.querySelector('input[name="commMode"]:checked')?.value || '',
             isEmail: document.getElementById('isEmail').checked,
+            durationMs: window.lastGenerationDurationMs || null,
             context: document.getElementById('contextInput').value.trim(), idea: document.getElementById('ideaInput').value.trim(), results
         };
         const history = getHistory(); history.unshift(item);
@@ -1240,14 +1284,29 @@ ${genSpoken ? '###SPOKEN_START###\n(这里写简单口语文本)\n###SPOKEN_END#
     function openHistoryDetail(id){
         selectedHistoryId=id; const item=getHistory().find(x=>x.id===id); if(!item)return; const L=currentUILang==='zh';
         document.getElementById('historyDetailTitle').textContent=formatHistoryDate(item.timestamp)+'  '+formatHistoryTime(item.timestamp);
-        const blocks=[];
-        if(item.modelLabel || item.model){
-            blocks.push(`<div class="history-block history-model"><div class="history-block-label">${L?'使用模型':'Model used'}</div><div class="history-block-text">${escapeHistory(item.modelLabel || item.model)}${item.provider ? ` <span class="history-model-provider">· ${escapeHistory(item.provider)}</span>` : ''}</div></div>`);
-        } if(item.idea)blocks.push(`<div class="history-block"><div class="history-block-label">${L?'你想表达的内容':'Your message'}</div><div class="history-block-text">${escapeHistory(item.idea)}</div></div>`);
-        if(item.context)blocks.push(`<div class="history-block"><div class="history-block-label">${L?'上下文':'Context'}</div><div class="history-block-text">${escapeHistory(item.context)}</div></div>`);
+        const resultBlocks=[];
         const labels={SPOKEN:L?'简单口语':'Simple Spoken',ORAL:L?'即时通讯':'Casual / IM',BUSINESS:L?'商务':'Business',FORMAL:L?'正式':'Formal'};
-        Object.entries(item.results||{}).forEach(([key,text])=>blocks.push(`<div class="history-block history-result"><div class="history-result-label">${labels[key]||key}</div><div class="history-result-text">${escapeHistory(text)}</div></div>`));
-        document.getElementById('historyDetailBody').innerHTML=blocks.join('');document.getElementById('historyDetail').classList.add('open');
+
+        const metaBlocks=[];
+        const modelName = item.modelLabel || item.model || '';
+        const modelProvider = item.provider ? ` <span class="history-model-provider">· ${escapeHistory(item.provider)}</span>` : '';
+        const generationTime = item.durationMs ? `${(item.durationMs / 1000).toFixed(1)} ${L?'秒':'s'}` : '';
+
+        if(modelName || generationTime){
+            const modelLabel = L ? '使用模型' : 'Model used';
+            const timeLabel = L ? '生成用时' : 'Generation time';
+            const combinedValue = `${modelName ? escapeHistory(modelName) + modelProvider : ''}${modelName && generationTime ? '  ·  ' : ''}${generationTime ? `<span class="history-generation-time">${timeLabel} ${generationTime}</span>` : ''}`;
+            metaBlocks.push(`<div class="history-block history-model"><div class="history-block-label">${modelName && generationTime ? `${modelLabel} · ${timeLabel}` : (modelName ? modelLabel : timeLabel)}</div><div class="history-block-text">${combinedValue}</div></div>`);
+        }
+        if(item.idea)metaBlocks.push(`<div class="history-block"><div class="history-block-label">${L?'你想表达的内容':'Your message'}</div><div class="history-block-text">${escapeHistory(item.idea)}</div></div>`);
+        if(item.context)metaBlocks.push(`<div class="history-block"><div class="history-block-label">${L?'上下文':'Context'}</div><div class="history-block-text">${escapeHistory(item.context)}</div></div>`);
+
+        Object.entries(item.results||{}).forEach(([key,text])=>resultBlocks.push(`<div class="history-block history-result"><div class="history-result-label">${labels[key]||key}</div><div class="history-result-text">${escapeHistory(text)}</div></div>`));
+
+        const metaHtml = metaBlocks.length ? `<div class="history-detail-meta">${metaBlocks.join('')}</div>` : '';
+        const resultHtml = resultBlocks.length ? `<div class="history-results-primary">${resultBlocks.join('')}</div>` : '';
+        document.getElementById('historyDetailBody').innerHTML=metaHtml + resultHtml;
+        document.getElementById('historyDetail').classList.add('open');
     }
     function closeHistoryDetail(){const el=document.getElementById('historyDetail');if(el)el.classList.remove('open');}
     function restoreHistoryItem(){
