@@ -1378,7 +1378,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 - 沟通对象：${recipientType === 'internal' ? '同事/跨部门同事' : '外部公司/店铺担当'}
 - 开头寒暄要求：${greetingInstruction}
 - 沟通模式：${mode === 'reply' ? 'Reply消息' : '主动找对方发起沟通'}
-- 是否为邮件：${isEmail ? `是（如果生成商务或正式邮件，最上方需附带【${isJapanese ? '件名：xxx' : 'Subject: xxx'}】）` : '否（即时消息/普通文本）'}
+- 是否为邮件：${isEmail ? `是（无论选择哪种输出风格，最上方都必须附带【${isJapanese ? '件名：xxx' : 'Subject: xxx'}】。如果是 Casual / IM，标题要简短、自然、直白；如果是 Business / Formal，则可更完整、正式。）` : '否（即时消息/普通文本）'}
 ${mode === 'reply' && context ? `- 【对方发来的原话/上下文】：${context}` : ''}
 - 【用户想表达的核心意思】：${idea}
 
@@ -1442,6 +1442,7 @@ ${isJapanese ? `【"〜の件" 使用规则（非常严格，请务必遵守）�
 
         prompt += `
 请严格按照以下纯文本格式输出结果（不要使用 JSON，不要使用 markdown 代码块标记，不要输出任何多余的说明文字）：
+${isEmail ? `【邮件标题规则】每一个被选中的输出风格都必须单独生成一个对应的标题，并放在该风格正文的最前面。Casual / IM 使用简短自然的标题（通常 5～15 个字即可），Business / Formal 使用更完整正式的标题。标题也必须使用目标语言。` : ''}
 ${genSpoken ? '###SPOKEN_START###\n(这里写简单口语文本)\n###SPOKEN_END###\n' : ''}${genOral ? '###ORAL_START###\n(这里写口头回复文本)\n###ORAL_END###\n' : ''}${genBusiness ? '###BUSINESS_START###\n(这里写标准商务文本)\n###BUSINESS_END###\n' : ''}${genFormal ? '###FORMAL_START###\n(这里写高度正式文本)\n###FORMAL_END###\n' : ''}
 请务必带上对应的 ###xxx_START### 和 ###xxx_END### 标记，标记独占一行，标记之间才是正文内容。
 `;
