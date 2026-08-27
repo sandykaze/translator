@@ -269,6 +269,14 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 #contextInput{min-height:100px}
 #ideaInput{min-height:125px}
 
+.context-label-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.context-translate-btn{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:7px;padding:4px 9px;font-size:.7rem;font-weight:650;cursor:pointer;white-space:nowrap}
+.context-translate-btn:hover{background:var(--surface-2)}
+.context-translate-btn:disabled{opacity:.55;cursor:wait}
+.context-translation{display:none;margin-top:8px;padding:10px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--text);font-size:.82rem;line-height:1.55;white-space:pre-wrap}
+.context-translation.active{display:block}
+.context-translation.loading{color:var(--muted)}
+
 .communication-options .email-option{
   display:flex;
   align-items:center;
@@ -391,6 +399,31 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 .api-input-row input:focus{border-color:#aeb3bc;background:var(--surface)}
 .api-save-btn{height:35px;border:0;border-radius:8px;padding:0 11px;background:var(--accent);color:#fff;font-size:.72rem;font-weight:650;cursor:pointer}
 .api-panel-note{font-size:.62rem;color:var(--muted);margin-top:8px}
+
+.model-manage-btn{width:100%;border:0;background:transparent;color:var(--muted);font-size:.68rem;text-align:left;padding:8px 9px;border-radius:8px;cursor:pointer}
+.model-manage-btn:hover{background:var(--surface-2);color:var(--text)}
+.model-manage-modal{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(10,12,16,.28);backdrop-filter:blur(4px)}
+.model-manage-modal.open{display:flex}
+.model-manage-card{width:min(520px,100%);max-height:min(720px,90vh);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 70px rgba(16,24,40,.2);padding:20px}
+.model-manage-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.model-manage-title{font-size:.95rem;font-weight:750}
+.model-manage-close{border:0;background:transparent;color:var(--muted);font-size:1.3rem;cursor:pointer}
+.model-manage-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.model-manage-row{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:11px}
+.model-manage-info{min-width:0;flex:1}
+.model-manage-name{font-size:.78rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.model-manage-id{font-size:.63rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.model-manage-actions{display:flex;gap:5px}
+.model-manage-actions button,.model-manage-add,.model-manage-save{border:1px solid var(--line);background:var(--surface-2);color:var(--text);border-radius:8px;padding:6px 9px;font-size:.68rem;cursor:pointer}
+.model-manage-actions button:hover,.model-manage-add:hover{background:var(--surface)}
+.model-manage-form{display:none;border-top:1px solid var(--line);padding-top:15px;margin-top:5px}
+.model-manage-form.open{display:block}
+.model-form-label{display:block;font-size:.68rem;font-weight:650;color:var(--muted);margin:0 0 5px}
+.model-form-input{width:100%;box-sizing:border-box;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--text);padding:0 10px;font-size:.75rem;margin-bottom:10px;outline:none}
+.model-form-actions{display:flex;justify-content:flex-end;gap:7px}
+.model-manage-save{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:650}
+.model-manage-provider{font-size:.68rem;color:var(--muted);margin-bottom:12px}
+
 .sr-only-control{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 @media(max-width:760px){
   .ai-model-trigger{padding-left:2px;max-width:155px}
@@ -475,7 +508,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
                     <div class="model-provider-group">
                         <div class="model-provider-title">Gemini</div>
                         <button type="button" class="model-option" data-provider="gemini" data-model="gemini-3.6-flash" onclick="selectModelFromMenu(this)">Gemini 3.6 Flash</button>
-                        <button type="button" class="model-option" data-provider="gemini" data-model="gemini-3.5-flash" onclick="selectModelFromMenu(this)">Gemini 3.5 Flash</button>
+                        <button type="button" class="model-option" data-provider="gemini" data-model="gemini-3.5-flash-lite" onclick="selectModelFromMenu(this)">Gemini 3.5 Flash-Lite</button>
                     </div>
                     <div class="model-provider-group">
                         <div class="model-provider-title">Zhipu</div>
@@ -485,6 +518,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
                     </div>
                     <div class="model-menu-footer">
                         <button type="button" class="api-status-btn" id="apiStatusBtn" onclick="toggleApiPanel()"><span class="api-dot" id="apiStatusDot"></span><span id="apiStatusText">API</span></button>
+                        <button type="button" class="model-manage-btn" onclick="openModelManager()">⚙ <span data-i18n="manageModels">管理 AI 模型</span></button>
                     </div>
                 </div>
                 <div class="api-panel" id="apiPanel">
@@ -504,6 +538,28 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             </div>
         </div>
     </header>
+<!-- AI model manager -->
+<div class="model-manage-modal" id="modelManageModal" onclick="if(event.target===this) closeModelManager()">
+  <div class="model-manage-card" onclick="event.stopPropagation()">
+    <div class="model-manage-head">
+      <div class="model-manage-title" data-i18n="manageModels">管理 AI 模型</div>
+      <button type="button" class="model-manage-close" onclick="closeModelManager()">×</button>
+    </div>
+    <div class="model-manage-provider" id="modelManageProvider"></div>
+    <div class="model-manage-list" id="modelManageList"></div>
+    <button type="button" class="model-manage-add" onclick="showModelForm()">＋ <span data-i18n="addModel">添加模型</span></button>
+    <div class="model-manage-form" id="modelManageForm">
+      <label class="model-form-label" data-i18n="modelName">模型名称</label>
+      <input class="model-form-input" id="modelFormName" placeholder="例如 Gemini 3.5 Flash-Lite">
+      <label class="model-form-label" data-i18n="modelId">Model ID</label>
+      <input class="model-form-input" id="modelFormId" placeholder="例如 gemini-3.5-flash-lite">
+      <div class="model-form-actions">
+        <button type="button" class="model-manage-actions button" onclick="hideModelForm()">取消</button>
+        <button type="button" class="model-manage-save" onclick="saveManagedModel()">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- Local history drawer -->
 <div id="historyOverlay" class="history-overlay" onclick="handleHistoryOverlayClick(event)">
   <aside class="history-drawer" onclick="event.stopPropagation()" aria-label="History">
@@ -594,8 +650,12 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 
             
             <div id="contextGroup" class="field">
-                <label for="contextInput"><span data-i18n="context">Context</span> <span style="font-weight:400;color:var(--muted)" data-i18n="optional">(optional)</span></label>
+                <div class="context-label-row">
+                    <label for="contextInput"><span data-i18n="context">Context</span> <span style="font-weight:400;color:var(--muted)" data-i18n="optional">(optional)</span></label>
+                    <button type="button" id="translateContextBtn" class="context-translate-btn" onclick="translateContextToChinese()" data-i18n="translateContext">翻译为中文</button>
+                </div>
                 <textarea id="contextInput" rows="4" placeholder="Paste the original message or relevant context" data-i18n-placeholder="contextPlaceholder"></textarea>
+                <div id="contextTranslation" class="context-translation"></div>
             </div>
 
             
@@ -674,6 +734,12 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             brandSub: '商务语言助手',
             history: '历史记录',
             clearHistory: '清空全部',
+            manageModels: '管理 AI 模型',
+            addModel: '添加模型',
+            editModel: '修改',
+            deleteModel: '删除',
+            modelName: '模型名称',
+            modelId: 'Model ID',
             back: '返回',
             restore: '恢复',
             save: '保存',
@@ -697,6 +763,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             context: '上下文',
             optional: '（可选）',
             contextPlaceholder: '粘贴对方发来的原文或相关背景',
+            translateContext: '翻译为中文',
             yourMessage: '你想表达的内容',
             yourMessagePlaceholder: '写下你想表达的核心意思',
             generate: '生成',
@@ -723,6 +790,12 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             brandSub: 'Business Language Assistant',
             history: 'History',
             clearHistory: 'Clear all',
+            manageModels: 'Manage AI Models',
+            addModel: 'Add model',
+            editModel: 'Edit',
+            deleteModel: 'Delete',
+            modelName: 'Model name',
+            modelId: 'Model ID',
             back: 'Back',
             restore: 'Restore',
             save: 'Save',
@@ -746,6 +819,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             context: 'Context',
             optional: '(optional)',
             contextPlaceholder: 'Paste the original message or relevant context',
+            translateContext: 'Translate to Chinese',
             yourMessage: 'Your message',
             yourMessagePlaceholder: 'Write what you want to say',
             generate: 'Generate',
@@ -800,10 +874,10 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         document.getElementById('langBtnEn').classList.toggle('active', lang === 'en');
     }
 
-    const MODEL_OPTIONS = {
+    const BUILTIN_MODEL_OPTIONS = {
         gemini: [
             { value: 'gemini-3.6-flash', label: 'Gemini 3.6 Flash' },
-            { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' }
+            { value: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite' }
         ],
         zhipu: [
             { value: 'glm-4-airx', label: 'GLM-4-AirX' },
@@ -811,6 +885,25 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             { value: 'glm-4.6', label: 'GLM-4.6' }
         ]
     };
+
+    let MODEL_OPTIONS = {};
+
+    function loadManagedModels() {
+        const overrides = JSON.parse(localStorage.getItem('translator_model_overrides') || '{}');
+        const custom = JSON.parse(localStorage.getItem('translator_custom_models') || '{}');
+        const deleted = JSON.parse(localStorage.getItem('translator_deleted_models') || '{}');
+        MODEL_OPTIONS = {};
+        Object.keys(BUILTIN_MODEL_OPTIONS).forEach(provider => {
+            const removed = deleted[provider] || [];
+            const providerOverrides = overrides[provider] || {};
+            const builtins = BUILTIN_MODEL_OPTIONS[provider]
+                .filter(m => !removed.includes(m.value))
+                .map(m => providerOverrides[m.value] ? {...m, ...providerOverrides[m.value]} : {...m});
+            MODEL_OPTIONS[provider] = builtins.concat(custom[provider] || []);
+        });
+    }
+
+    loadManagedModels();
 
     const PROVIDER_DEFAULT_MODEL = {
         gemini: 'gemini-3.6-flash',
@@ -827,6 +920,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
     }
 
     function updateModelOptions() {
+        loadManagedModels();
         const provider = getCurrentProvider();
         const select = document.getElementById('modelSelect');
         const savedModel = localStorage.getItem('translator_model_' + provider);
@@ -840,7 +934,9 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         });
 
         const valid = MODEL_OPTIONS[provider].some(m => m.value === savedModel);
-        select.value = valid ? savedModel : PROVIDER_DEFAULT_MODEL[provider];
+        const defaultModel = PROVIDER_DEFAULT_MODEL[provider];
+        const defaultValid = MODEL_OPTIONS[provider].some(m => m.value === defaultModel);
+        select.value = valid ? savedModel : (defaultValid ? defaultModel : (MODEL_OPTIONS[provider][0]?.value || ''));
 
         select.onchange = function() {
             localStorage.setItem('translator_model_' + provider, select.value);
@@ -928,6 +1024,148 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         document.getElementById('aiModelTrigger').setAttribute('aria-expanded','false');
     }
 
+
+    let editingManagedModel = null;
+
+    function openModelManager() {
+        document.getElementById('modelMenu').classList.remove('open');
+        document.getElementById('apiPanel').classList.remove('open');
+        document.getElementById('modelManageModal').classList.add('open');
+        renderModelManager();
+    }
+
+    function closeModelManager() {
+        document.getElementById('modelManageModal').classList.remove('open');
+        hideModelForm();
+    }
+
+    function renderModelManager() {
+        loadManagedModels();
+        const provider = getCurrentProvider();
+        document.getElementById('modelManageProvider').textContent =
+            (provider === 'gemini' ? 'Gemini' : 'Zhipu') + ' · 当前模型列表';
+        const list = document.getElementById('modelManageList');
+        list.innerHTML = '';
+        (MODEL_OPTIONS[provider] || []).forEach(model => {
+            const row = document.createElement('div');
+            row.className = 'model-manage-row';
+            row.innerHTML = `<div class="model-manage-info"><div class="model-manage-name"></div><div class="model-manage-id"></div></div>
+                <div class="model-manage-actions">
+                  <button type="button" onclick="editManagedModel('${encodeURIComponent(model.value)}')">${t('editModel')}</button>
+                  <button type="button" onclick="deleteManagedModel('${encodeURIComponent(model.value)}')">${t('deleteModel')}</button>
+                </div>`;
+            row.querySelector('.model-manage-name').textContent = model.label;
+            row.querySelector('.model-manage-id').textContent = model.value;
+            list.appendChild(row);
+        });
+    }
+
+    function showModelForm() {
+        editingManagedModel = null;
+        document.getElementById('modelFormName').value = '';
+        document.getElementById('modelFormId').value = '';
+        document.getElementById('modelManageForm').classList.add('open');
+        document.getElementById('modelFormName').focus();
+    }
+
+    function hideModelForm() {
+        editingManagedModel = null;
+        const form = document.getElementById('modelManageForm');
+        if (form) form.classList.remove('open');
+    }
+
+    function editManagedModel(encodedValue) {
+        const provider = getCurrentProvider();
+        const value = decodeURIComponent(encodedValue);
+        const model = (MODEL_OPTIONS[provider] || []).find(m => m.value === value);
+        if (!model) return;
+        editingManagedModel = {provider, originalValue: value};
+        document.getElementById('modelFormName').value = model.label;
+        document.getElementById('modelFormId').value = model.value;
+        document.getElementById('modelManageForm').classList.add('open');
+        document.getElementById('modelFormName').focus();
+    }
+
+    function saveManagedModel() {
+        const provider = getCurrentProvider();
+        const name = document.getElementById('modelFormName').value.trim();
+        const id = document.getElementById('modelFormId').value.trim();
+        if (!name || !id) {
+            alert(currentUILang === 'zh' ? '请填写模型名称和 Model ID。' : 'Please enter both model name and Model ID.');
+            return;
+        }
+
+        const isBuiltin = BUILTIN_MODEL_OPTIONS[provider].some(m => m.value === (editingManagedModel?.originalValue || id));
+        if (editingManagedModel) {
+            const original = editingManagedModel.originalValue;
+            if (isBuiltin) {
+                const overrides = JSON.parse(localStorage.getItem('translator_model_overrides') || '{}');
+                overrides[provider] = overrides[provider] || {};
+                overrides[provider][original] = {label:name, value:id};
+                localStorage.setItem('translator_model_overrides', JSON.stringify(overrides));
+                if (original !== id) {
+                    const deleted = JSON.parse(localStorage.getItem('translator_deleted_models') || '{}');
+                    deleted[provider] = [...new Set([...(deleted[provider] || []), original])];
+                    localStorage.setItem('translator_deleted_models', JSON.stringify(deleted));
+                    const custom = JSON.parse(localStorage.getItem('translator_custom_models') || '{}');
+                    custom[provider] = (custom[provider] || []).filter(m => m.value !== id);
+                    custom[provider].push({value:id,label:name});
+                    localStorage.setItem('translator_custom_models', JSON.stringify(custom));
+                }
+            } else {
+                const custom = JSON.parse(localStorage.getItem('translator_custom_models') || '{}');
+                custom[provider] = (custom[provider] || []).map(m => m.value === original ? {value:id,label:name} : m);
+                localStorage.setItem('translator_custom_models', JSON.stringify(custom));
+            }
+        } else {
+            const all = MODEL_OPTIONS[provider] || [];
+            if (all.some(m => m.value === id)) {
+                alert(currentUILang === 'zh' ? '这个 Model ID 已经存在。' : 'This Model ID already exists.');
+                return;
+            }
+            const custom = JSON.parse(localStorage.getItem('translator_custom_models') || '{}');
+            custom[provider] = custom[provider] || [];
+            custom[provider].push({value:id,label:name});
+            localStorage.setItem('translator_custom_models', JSON.stringify(custom));
+        }
+
+        const currentValue = document.getElementById('modelSelect').value;
+        const targetValue = editingManagedModel?.originalValue;
+        loadManagedModels();
+        updateModelOptions();
+        if (targetValue === currentValue) {
+            document.getElementById('modelSelect').value = id;
+            localStorage.setItem('translator_model_' + provider, id);
+            updateAiHeader();
+        }
+        hideModelForm();
+        renderModelManager();
+    }
+
+    function deleteManagedModel(encodedValue) {
+        const provider = getCurrentProvider();
+        const value = decodeURIComponent(encodedValue);
+        const model = (MODEL_OPTIONS[provider] || []).find(m => m.value === value);
+        if (!model) return;
+        if (!confirm(currentUILang === 'zh' ? `确定删除「${model.label}」吗？` : `Delete "${model.label}"?`)) return;
+
+        const custom = JSON.parse(localStorage.getItem('translator_custom_models') || '{}');
+        custom[provider] = (custom[provider] || []).filter(m => m.value !== value);
+        localStorage.setItem('translator_custom_models', JSON.stringify(custom));
+
+        if (BUILTIN_MODEL_OPTIONS[provider].some(m => m.value === value)) {
+            const deleted = JSON.parse(localStorage.getItem('translator_deleted_models') || '{}');
+            deleted[provider] = [...new Set([...(deleted[provider] || []), value])];
+            localStorage.setItem('translator_deleted_models', JSON.stringify(deleted));
+        }
+
+        if (document.getElementById('modelSelect').value === value) {
+            localStorage.removeItem('translator_model_' + provider);
+        }
+        updateModelOptions();
+        renderModelManager();
+    }
+
     function toggleCommMode() {
         const mode = document.querySelector('input[name="commMode"]:checked').value;
         const contextGroup = document.getElementById('contextGroup');
@@ -935,6 +1173,63 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
             contextGroup.style.display = 'none';
         } else {
             contextGroup.style.display = 'block';
+        }
+    }
+
+    async function translateContextToChinese() {
+        const contextInput = document.getElementById('contextInput');
+        const resultEl = document.getElementById('contextTranslation');
+        const btn = document.getElementById('translateContextBtn');
+        const context = contextInput.value.trim();
+        const provider = getCurrentProvider();
+        const apiKey = document.getElementById('apiKey').value.trim();
+        const model = document.getElementById('modelSelect').value;
+
+        if (!context) {
+            alert(currentUILang === 'zh' ? '请先在 Context 中粘贴对方发来的日语。' : 'Please paste the Japanese message into Context first.');
+            return;
+        }
+        if (!apiKey) {
+            alert(t('apiKeyRequired'));
+            return;
+        }
+
+        btn.disabled = true;
+        resultEl.className = 'context-translation active loading';
+        resultEl.textContent = currentUILang === 'zh' ? '正在翻译…' : 'Translating…';
+
+        const prompt = `请把下面对方发来的日语原文准确翻译成自然、易懂的中文。只输出中文译文，不要解释，不要总结，不要改写原意。\n\n【日语原文】\n${context}`;
+
+        try {
+            let url, headers, body, extract;
+            if (provider === 'gemini') {
+                url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`;
+                headers = { 'Content-Type': 'application/json' };
+                body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
+                extract = data => data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            } else {
+                url = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+                headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
+                body = JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], stream: false });
+                extract = data => data?.choices?.[0]?.message?.content;
+            }
+
+            const response = await fetch(url, { method: 'POST', headers, body });
+            const data = await response.json().catch(() => null);
+            if (!response.ok) {
+                const message = data?.error?.message || 'Translation request failed';
+                throw new Error(message);
+            }
+            const translated = extract(data)?.trim();
+            if (!translated) throw new Error('No translation returned.');
+
+            resultEl.className = 'context-translation active';
+            resultEl.textContent = translated;
+        } catch (error) {
+            resultEl.className = 'context-translation active';
+            resultEl.textContent = (currentUILang === 'zh' ? '翻译失败：' : 'Translation failed: ') + error.message;
+        } finally {
+            btn.disabled = false;
         }
     }
 
