@@ -388,6 +388,13 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
 .api-status-btn{border:0;background:transparent;padding:4px;display:flex;align-items:center;gap:7px;font-size:.66rem;color:var(--muted);cursor:pointer}
 .api-dot{width:6px;height:6px;border-radius:50%;background:#b9bec6;display:inline-block}
 .api-dot.ready{background:#20242a}
+
+.api-key-header-btn{display:flex;align-items:center;gap:7px}
+.api-key-header-btn .api-dot{width:7px;height:7px;background:#b9bec6}
+.api-key-header-btn .api-dot.ready{background:var(--accent)}
+.api-key-header-btn:not(.is-ready){border-color:#cdd1d6;color:var(--muted)}
+.api-key-header-btn:not(.is-ready):hover{background:var(--surface-2);color:var(--text)}
+@media(max-width:760px){.api-key-header-btn{order:-1}}
 .api-status-btn:hover{color:var(--text)}
 .api-panel{position:absolute;z-index:90;right:0;top:calc(100% + 12px);width:290px;padding:15px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 48px rgba(16,24,40,.14);display:none}
 .api-panel.open{display:block;animation:aiMenuIn .14s ease-out}
@@ -500,6 +507,9 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
                 <button type="button" class="lang-btn" id="langBtnEn" onclick="setUILang('en')">EN</button>
             </div>
             <div class="ai-control-wrap" id="aiControlWrap">
+                <button type="button" class="history-btn api-key-header-btn" id="apiKeyHeaderBtn" onclick="toggleApiPanel()">
+                    <span class="api-dot" id="apiHeaderDot"></span><span id="apiHeaderText">API Key</span>
+                </button>
                 <button type="button" class="ai-model-trigger" id="aiModelTrigger" onclick="toggleModelMenu()" aria-haspopup="true" aria-expanded="false">
                     <span class="ai-spark">✦</span><span id="currentModelLabel">AI Model</span><span class="ai-chevron">⌄</span>
                 </button>
@@ -509,12 +519,6 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
                         <div class="model-provider-title">Gemini</div>
                         <button type="button" class="model-option" data-provider="gemini" data-model="gemini-3.6-flash" onclick="selectModelFromMenu(this)">Gemini 3.6 Flash</button>
                         <button type="button" class="model-option" data-provider="gemini" data-model="gemini-3.5-flash-lite" onclick="selectModelFromMenu(this)">Gemini 3.5 Flash-Lite</button>
-                    </div>
-                    <div class="model-provider-group">
-                        <div class="model-provider-title">Zhipu</div>
-                        <button type="button" class="model-option" data-provider="zhipu" data-model="glm-4-airx" onclick="selectModelFromMenu(this)">GLM-4-AirX</button>
-                        <button type="button" class="model-option" data-provider="zhipu" data-model="glm-4-air" onclick="selectModelFromMenu(this)">GLM-4-Air</button>
-                        <button type="button" class="model-option" data-provider="zhipu" data-model="glm-4.6" onclick="selectModelFromMenu(this)">GLM-4.6</button>
                     </div>
                     <div class="model-menu-footer">
                         <button type="button" class="api-status-btn" id="apiStatusBtn" onclick="toggleApiPanel()"><span class="api-dot" id="apiStatusDot"></span><span id="apiStatusText">API</span></button>
@@ -532,7 +536,6 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
                 </div>
                 <select id="providerSelect" class="sr-only-control" aria-label="AI provider" onchange="onProviderChange()">
                     <option value="gemini">Gemini</option>
-                    <option value="zhipu">智谱 GLM (Zhipu)</option>
                 </select>
                 <select id="modelSelect" class="sr-only-control" aria-label="AI model"></select>
             </div>
@@ -878,11 +881,6 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         gemini: [
             { value: 'gemini-3.6-flash', label: 'Gemini 3.6 Flash' },
             { value: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite' }
-        ],
-        zhipu: [
-            { value: 'glm-4-airx', label: 'GLM-4-AirX' },
-            { value: 'glm-4-air', label: 'GLM-4-Air' },
-            { value: 'glm-4.6', label: 'GLM-4.6' }
         ]
     };
 
@@ -906,13 +904,11 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
     loadManagedModels();
 
     const PROVIDER_DEFAULT_MODEL = {
-        gemini: 'gemini-3.6-flash',
-        zhipu: 'glm-4.6'
+        gemini: 'gemini-3.6-flash'
     };
 
     const PROVIDER_KEY_PLACEHOLDER = {
-        gemini: 'Gemini API Key',
-        zhipu: '智谱 (Zhipu) API Key'
+        gemini: 'Gemini API Key'
     };
 
     function getCurrentProvider() {
@@ -983,7 +979,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         const provider=getCurrentProvider();
         const label=getCurrentModelLabel();
         const trigger=document.getElementById('currentModelLabel');
-        const providerName=provider==='gemini'?'Gemini':'Zhipu';
+        const providerName='Gemini';
         if(trigger) trigger.textContent=label;
         const panelProvider=document.getElementById('apiPanelProvider');
         if(panelProvider) panelProvider.textContent=providerName;
@@ -992,6 +988,12 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         if(dot) dot.classList.toggle('ready',!!key);
         const status=document.getElementById('apiStatusText');
         if(status) status.textContent=key?'Ready':'API';
+        const headerBtn=document.getElementById('apiKeyHeaderBtn');
+        const headerDot=document.getElementById('apiHeaderDot');
+        const headerText=document.getElementById('apiHeaderText');
+        if(headerDot) headerDot.classList.toggle('ready',!!key);
+        if(headerBtn) headerBtn.classList.toggle('is-ready',!!key);
+        if(headerText) headerText.textContent = key ? (providerName+' Key ✓') : (currentUILang==='zh' ? '设置 API Key' : 'Set API Key');
         document.querySelectorAll('.model-option').forEach(btn=>{
             btn.classList.toggle('active',btn.dataset.provider===provider && btn.dataset.model===document.getElementById('modelSelect').value);
         });
@@ -1043,7 +1045,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         loadManagedModels();
         const provider = getCurrentProvider();
         document.getElementById('modelManageProvider').textContent =
-            (provider === 'gemini' ? 'Gemini' : 'Zhipu') + ' · 当前模型列表';
+            'Gemini · 当前模型列表';
         const list = document.getElementById('modelManageList');
         list.innerHTML = '';
         (MODEL_OPTIONS[provider] || []).forEach(model => {
@@ -1201,18 +1203,10 @@ input[type=radio],input[type=checkbox]{accent-color:var(--accent);margin-top:2px
         const prompt = `请把下面对方发来的日语原文准确翻译成自然、易懂的中文。只输出中文译文，不要解释，不要总结，不要改写原意。\n\n【日语原文】\n${context}`;
 
         try {
-            let url, headers, body, extract;
-            if (provider === 'gemini') {
-                url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`;
-                headers = { 'Content-Type': 'application/json' };
-                body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
-                extract = data => data?.candidates?.[0]?.content?.parts?.[0]?.text;
-            } else {
-                url = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
-                headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
-                body = JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], stream: false });
-                extract = data => data?.choices?.[0]?.message?.content;
-            }
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`;
+            const headers = { 'Content-Type': 'application/json' };
+            const body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
+            const extract = data => data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
             const response = await fetch(url, { method: 'POST', headers, body });
             const data = await response.json().catch(() => null);
@@ -1510,20 +1504,6 @@ ${genSpoken ? '###SPOKEN_START###\n(这里写简单口语文本)\n###SPOKEN_END#
                 }),
                 extractPiece: (chunk) => chunk?.candidates?.[0]?.content?.parts?.[0]?.text,
                 extractError: (errData) => errData?.error?.message || 'Gemini API request failed'
-            },
-            zhipu: {
-                url: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [{ role: 'user', content: prompt }],
-                    stream: true
-                }),
-                extractPiece: (chunk) => chunk?.choices?.[0]?.delta?.content,
-                extractError: (errData) => errData?.error?.message || '智谱 API request failed'
             }
         };
 
